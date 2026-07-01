@@ -1,5 +1,7 @@
 // フロント -> バックエンドの API 呼び出しラッパー
 
+import { API_ENDPOINTS, SOLDOUT_FETCH_IDS } from "./constants/config";
+
 // WARNING: これはテスト環境用
 // WARNING: フロントだけで動くようにFALLBACK
 
@@ -13,7 +15,7 @@ export const Api = {
   async getSquareConfig() {
     // 1) try /api/square/config expecting JSON
     try {
-      const res = await fetch("/api/square/config", {
+      const res = await fetch(API_ENDPOINTS.SQUARE_CONFIG, {
         headers: { Accept: "application/json" },
       });
       if (res.ok) {
@@ -89,13 +91,13 @@ export const Api = {
   // 在庫（売切れ）取得（連動ルール付き）:
   async fetchSoldoutMap() {
     // APIから取得するIDは[10,20,91,92,93,94]のみ
-    const fetchIds = [10, 20, 91, 92, 93, 94];
+    const fetchIds = SOLDOUT_FETCH_IDS;
     const soldout = {};
 
     // 取得
     for (const id of fetchIds) {
       try {
-        const res = await fetch(`/api/items/get/byitemId/${id}`);
+        const res = await fetch(API_ENDPOINTS.ITEM_BY_ID(id));
         if (!res.ok) {
           soldout[id] = false;
           continue;
@@ -143,7 +145,7 @@ export const Api = {
       items, // array of { itemId, quantity } filtered by buildOrderItems on frontend
       amount,
     };
-    const res = await fetch("/api/order/set", {
+    const res = await fetch(API_ENDPOINTS.ORDER_CREATE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -164,9 +166,7 @@ export const Api = {
     sourceId,
   }) {
     // path variables に sourceId を載せる（エンコード必須）
-    const url = `/api/payment/create/${orderId}/${encodeURIComponent(
-      sourceId
-    )}`;
+      const url = API_ENDPOINTS.PAYMENT_CHARGE(orderId, sourceId);
     // PaymentController.createPayment は path variables のみ受け取る実装のため body は不要。
     // サーバで追加の検証が必要ならここで body を渡す（現在は不要）
     const res = await fetch(url, {
@@ -184,7 +184,7 @@ export const Api = {
   // 注文取得: backend のエンドポイントに合わせる
   // backend has: GET /api/order/get/byorderId/{orderId}
   async fetchOrder(orderId) {
-    const res = await fetch(`/api/order/get/byorderId/${orderId}`);
+    const res = await fetch(API_ENDPOINTS.ORDER_GET(orderId));
     if (!res.ok) throw new Error("注文取得に失敗しました");
     return res.json();
   },

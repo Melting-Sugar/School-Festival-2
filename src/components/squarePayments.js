@@ -1,10 +1,12 @@
 // src/squarePayments.js
-export async function loadSquareSdk() {
+import { SQUARE_ENVIRONMENT, SQUARE_SDK_URLS } from "../constants/config";
+
+export async function loadSquareSdk(env = SQUARE_ENVIRONMENT.PRODUCTION) {
   const id = "square-web-payments-sdk";
   if (document.getElementById(id)) return;
   const script = document.createElement("script");
   script.id = id;
-  script.src = "https://web.squarecdn.com/v1/square.js";
+  script.src = SQUARE_SDK_URLS[env];
   script.async = true;
   await new Promise((resolve, reject) => {
     script.onload = resolve;

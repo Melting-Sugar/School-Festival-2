@@ -1,6 +1,6 @@
-const ALLOWED_IDS = new Set([
-  10, 20, 31, 32, 33, 34, 41, 42, 43, 44, 51, 52, 53, 54,
-]);
+import { ORDER_ALLOWED_IDS } from "./constants/items";
+
+const ALLOWED_IDS = new Set(ORDER_ALLOWED_IDS);
 
 export const buildOrderItems = (cart) =>
   Object.entries(cart)

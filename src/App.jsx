@@ -22,6 +22,7 @@ import {
   getCookieStr,
   deleteCookie,
 } from "./cookies";
+
 import img_10 from "../src/image/img_10.jpg";
 import img_20 from "../src/image/img_20.jpg";
 import img_30 from "../src/image/img_30.jpg";
@@ -32,84 +33,53 @@ import img_92 from "../src/image/img_92.jpg";
 import img_93 from "../src/image/img_93.jpg";
 import img_94 from "../src/image/img_94.jpg";
 
+import {
+  PRODUCT_CATEGORIES,
+  DRINK_TYPE_IDS,
+  PRODUCT_CATEGORY_IDS,
+  DRINK_SUBITEM_IDS,
+  DRINK_TYPE_NAMES,
+  SET_DRINK_SUBITEM_MAP,
+  PRICES,
+  ITEM_NAMES,
+  CART_INITIAL,
+  getDrinkBreakdownId,
+  parseSetBreakdownId,
+} from "./constants/items";
+
+import { STEPS, STEPS_ARRAY } from "./constants/steps";
+
+import {
+  TIMEOUTS,
+  COOKIE_CONFIG,
+  TEST_DATE,
+  TEMP_COOKIE_TEST_KEY,
+  USE_MOCK_PAYMENT,
+  USE_TEST_TIME,
+} from "./constants/config";
+
+import {
+  INITIAL_APP_STATE,
+  INITIAL_PAYMENT_STATE,
+  INITIAL_UI_STATE,
+} from "./constants/initialState";
+
+const steps = STEPS_ARRAY;
+const prices = PRICES;
+const itemNames = ITEM_NAMES;
+const initialState = INITIAL_APP_STATE;
 
 /* ブラウザコンソールで Api.getSquareConfig() を叩けるようにする */
 // WARNING:テストの後は消す
 // window.Api = Api;
 
-/* バック連携前用のMOCKスイッチ（本番は false に戻す） */
-const USE_MOCK_PAYMENT = false;
-
-/* ------ 変数や定数 ------ */
-
-const steps = [
-  "title",
-  "menu",
-  "drink",
-  "cart",
-  "time",
-  "payment",
-  "paymentResult",
-  "numberTag",
-];
-
-/* 値段 */
-const prices = {
-  10: 470,
-  20: 670,
-  30: 150,
-  40: 570,
-  50: 770,
-};
-
-const itemNames = {
-  10: "角煮 単品",
-  20: "角煮大盛り 単品",
-  30: "ドリンク 単品",
-  40: "【お得】角煮ドリンクセット",
-  50: "【お得】角煮ドリンクセット大盛り",
-  91: "コーラ",
-  92: "なっちゃんオレンジ",
-  93: "三ツ矢サイダー",
-  94: "烏龍茶",
-};
-
-/* 初期値 */
-const initialState = {
-  step: "title",
-  cart: {
-    91: 0,
-    92: 0,
-    93: 0,
-    94: 0,
-    30: 0,
-    40: 0,
-    50: 0,
-
-    10: 0,
-    20: 0,
-    31: 0,
-    32: 0,
-    33: 0,
-    34: 0,
-    41: 0,
-    42: 0,
-    43: 0,
-    44: 0,
-    51: 0,
-    52: 0,
-    53: 0,
-    54: 0,
-  },
-};
-
-/* テスト時にSOLDOUT判定にしないための日付 */
-const testDate = new Date(2025, 8, 22, 12, 0, 0);
 const appStartTime = Date.now();
 function getCurrentTestDate() {
   const elapsedMs = Date.now() - appStartTime; // 経過ミリ秒
-  return new Date(testDate.getTime() + elapsedMs);
+  return new Date(TEST_DATE.getTime() + elapsedMs);
 }
+
+const currentTestTime = USE_TEST_TIME ? getCurrentTestDate() : false;
 
 
 /* helper: format Date -> "yyyy-MM-dd'T'HH:mm:ss" (LocalDateTime style, no Z) */
@@ -206,47 +176,48 @@ const screenState = (state, action) => {
     }
     case "CLEAR_TEMPORARY_DRINKS": {
       const newCart = { ...state.cart };
-      newCart[91] = 0;
-      newCart[92] = 0;
-      newCart[93] = 0;
-      newCart[94] = 0;
+      for (const drinkId of DRINK_TYPE_IDS) {
+        newCart[drinkId] = 0;
+      }
       return { ...state, cart: newCart };
     }
     case "DELETE_TEMPORARY": {
       const newCart = { ...state.cart };
-      newCart[30] = 0;
-      newCart[40] = 0;
-      newCart[50] = 0;
+      for (const itemId of [
+        PRODUCT_CATEGORIES.DRINK_SINGLE,
+        PRODUCT_CATEGORIES.PORK_DRINK_SET,
+        PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE,
+      ]) {
+        newCart[itemId] = 0;
+      }
       return { ...state, cart: newCart };
     }
     case "ORGANIZE_CART": {
       const cart = state.cart;
       const newCart = { ...cart };
-      let sumM = newCart[40] || 0;
-      let sumL = newCart[50] || 0;
-      for (let i = 31; i <= 34; i++) newCart[i] = 0;
-      for (let i = 41; i <= 44; i++) newCart[i] = 0;
-      for (let i = 51; i <= 54; i++) newCart[i] = 0;
+      let sumM = newCart[PRODUCT_CATEGORIES.PORK_DRINK_SET] || 0;
+      let sumL = newCart[PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE] || 0;
+      for (const breakdownId of DRINK_SUBITEM_IDS) newCart[breakdownId] = 0;
 
-      for (let d = 91; d <= 94; d++) {
-        const drinkNo = d - 90; // 1..4
+      for (const d of DRINK_TYPE_IDS) {
+        const drinkNo = d % 10; // 1..4
         let qty = newCart[d] || 0;
         const takeM = Math.min(qty, sumM);
         if (takeM > 0) {
-          const target = 40 + drinkNo; // 41–44
+          const target = PRODUCT_CATEGORIES.PORK_DRINK_SET + drinkNo; // 41–44
           newCart[target] = (newCart[target] || 0) + takeM;
           sumM -= takeM;
           qty -= takeM;
         }
         const takeL = Math.min(qty, sumL);
         if (takeL > 0) {
-          const target = 50 + drinkNo; // 51–54
+          const target = PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE + drinkNo; // 51–54
           newCart[target] = (newCart[target] || 0) + takeL;
           sumL -= takeL;
           qty -= takeL;
         }
         if (qty > 0) {
-          const target = 30 + drinkNo; // 31–34
+          const target = PRODUCT_CATEGORIES.DRINK_SINGLE + drinkNo; // 31–34
           newCart[target] = (newCart[target] || 0) + qty;
           qty = 0;
         }
@@ -264,16 +235,11 @@ const screenState = (state, action) => {
 /* ------ 本体 ------ */
 
 export const App = () => {
-  const [isSoldout, setIsSoldout] = useState({
-    10: false, 20: false, 30: false, 40: false, 50: false,
-    91: false, 92: false, 93: false, 94: false,
-  });
+  const [isSoldout, setIsSoldout] = useState(INITIAL_UI_STATE.isSoldout);
 
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [state, dispatch] = useReducer(screenState, initialState);
-
-  // 追加: 送信中フラグ
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(INITIAL_UI_STATE.selectedTime);
+  const [state, dispatch] = useReducer(screenState, INITIAL_APP_STATE);
+  const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
 
   const goto = (s) => dispatch({ type: "GOTO", step: s });
   const next = () => {
@@ -298,33 +264,31 @@ export const App = () => {
   const removeItems = (id) => dispatch({ type: "REMOVE_ITEM", itemId: id });
 
   const calculateNumberOfDrinksInMenu = () => {
-    return state.cart[30] + state.cart[40] + state.cart[50];
+    return (
+      state.cart[PRODUCT_CATEGORIES.DRINK_SINGLE] +
+      state.cart[PRODUCT_CATEGORIES.PORK_DRINK_SET] +
+      state.cart[PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE]
+    );
   };
 
   const calculateNumberOfDrinksInDrink = () => {
-    return state.cart[91] + state.cart[92] + state.cart[93] + state.cart[94];
+    return DRINK_TYPE_IDS.reduce((sum, id) => sum + (state.cart[id] || 0), 0);
   };
 
   const calculateDifferenceOfDrinks = () => {
     return calculateNumberOfDrinksInMenu() - calculateNumberOfDrinksInDrink();
   };
   const calculateSumInMenu = () => {
-    return (
-      state.cart[10] +
-      state.cart[20] +
-      state.cart[30] +
-      state.cart[40] +
-      state.cart[50]
+    return PRODUCT_CATEGORY_IDS.reduce(
+      (sum, itemId) => sum + (state.cart[itemId] || 0),
+      0
     );
   };
 
   const calculateSumPrice = useCallback(() => {
-    return (
-      prices[10] * state.cart[10] +
-      prices[20] * state.cart[20] +
-      prices[30] * state.cart[30] +
-      prices[40] * state.cart[40] +
-      prices[50] * state.cart[50]
+    return PRODUCT_CATEGORY_IDS.reduce(
+      (sum, itemId) => sum + (prices[itemId] || 0) * (state.cart[itemId] || 0),
+      0
     );
   }, [state.cart]);
 
@@ -338,22 +302,7 @@ export const App = () => {
   }, [state.step]);
 
   /* カード決済用の変数・関数 */
-  const [paymentPhase, setPaymentPhase] = useState("connecting");
   const paymentTimerRef = useRef(null);
-  const [paymentOutcome, setPaymentOutcome] = useState({
-    ok: false,
-    orderId: null,
-    error: null,
-    receiptUrl: null,
-    displayReserved: null,
-  });
-  const [currentOrderId, setCurrentOrderId] = useState(null);
-  const [currentOrderCreatedAtIso, setCurrentOrderCreatedAtIso] =
-    useState(null);
-  const [cardAttached, setCardAttached] = useState(false);
-  const [billingFamilyName, setBillingFamilyName] = useState("");
-  const [billingGivenName, setBillingGivenName] = useState("");
-  const [billingEmail, setBillingEmail] = useState("");
   const cardRef = useRef(null);
 
   function clearCardContainer() {
@@ -371,7 +320,7 @@ export const App = () => {
       cardRef.current = null;
       clearCardContainer();
       try {
-        setCardAttached(false);
+        setPaymentState({...paymentState, cardAttached: false});
       } catch { }
     }
   }, [/* no external deps other than stable refs/setters */]);
@@ -381,7 +330,10 @@ export const App = () => {
 
   const ensureCardMounted = useCallback(
     async (applicationId, locationId) => {
-      function waitForContainer(timeoutMs = 3000, intervalMs = 50) {
+      function waitForContainer(
+        timeoutMs = TIMEOUTS.CARD_ATTACH_WAIT,
+        intervalMs = TIMEOUTS.CARD_ATTACH_INTERVAL
+      ) {
         const start = Date.now();
         return new Promise((resolve) => {
           const check = () => {
@@ -397,8 +349,8 @@ export const App = () => {
       async function tryAttach(
         card,
         selector = "#card-container",
-        tries = 4,
-        delayMs = 200
+        tries = RETRY_CONFIG.CARD_ATTACH_TRIES,
+        delayMs = RETRY_CONFIG.CARD_ATTACH_DELAY
       ) {
         for (let i = 0; i < tries; i++) {
           try {
@@ -415,16 +367,16 @@ export const App = () => {
 
       if (!window.Square) throw new Error("Square SDKが読み込まれていません");
 
-      const container = await waitForContainer(8000, 50);
+      const container = await waitForContainer();
       if (!container) {
         throw new Error("#card-container が見つかりません（タイムアウト）。");
       }
 
       if (cardRef.current && container.childElementCount === 0) {
         try {
-          const ok = await tryAttach(cardRef.current, "#card-container", 4, 300);
+          const ok = await tryAttach(cardRef.current, "#card-container");
           if (ok) {
-            setCardAttached(true);
+            setPaymentState({...paymentState, cardAttached: true});
             return;
           }
           await destroyCardIfAny();
@@ -443,7 +395,7 @@ export const App = () => {
 
         const card = await payments.card();
 
-        const attached = await tryAttach(card, "#card-container", 4, 300);
+        const attached = await tryAttach(card, "#card-container");
         if (!attached) {
           try {
             await card.destroy?.();
@@ -454,12 +406,12 @@ export const App = () => {
         }
 
         cardRef.current = card;
-        setCardAttached(true);
+        setPaymentState({...paymentState, cardAttached: true});
         return;
       }
 
       if (cardRef.current && container.childElementCount > 0) {
-        setCardAttached(true);
+        setPaymentState({...paymentState, cardAttached: true});
       }
       return;
     },
@@ -469,14 +421,14 @@ export const App = () => {
   /* cookie復元: マウント時にのみ実行 */
   useEffect(() => {
     try {
-      const saved = getCookieJSON("cm_order_v1");
-      console.log("DEBUG: cm_order_v1 cookie loaded:", saved);
+      const saved = getCookieJSON(COOKIE_CONFIG.KEY);
+      console.log("DEBUG: " + COOKIE_CONFIG.KEY + " cookie loaded:", saved);
       if (!saved) return;
 
       const { createdAt, reservedAtIso, orderId, itemsCart, displayReserved } =
         saved;
       if (!reservedAtIso) {
-        deleteCookie("cm_order_v1");
+        deleteCookie(COOKIE_CONFIG.KEY);
         return;
       }
 
@@ -502,54 +454,54 @@ export const App = () => {
       const reserved = parseReservedFromSaved(reservedAtIso, createdAt);
       if (!reserved) {
         console.warn(
-          "DEBUG: cm_order_v1 has invalid reservedAtIso, deleting cookie:",
+          "DEBUG: " + COOKIE_CONFIG.KEY + " has invalid reservedAtIso, deleting cookie:",
           reservedAtIso
         );
-        deleteCookie("cm_order_v1");
+        deleteCookie(COOKIE_CONFIG.KEY);
         return;
       }
 
       const now = new Date();
       const msSinceReserved = now.getTime() - reserved.getTime();
-      const oneHourMs = 60 * 60 * 1000;
-      if (msSinceReserved > oneHourMs) {
+      if (msSinceReserved > COOKIE_CONFIG.RESERVATION_VALID_DURATION_MS) {
         console.log(
-          "DEBUG: cm_order_v1 expired (more than 1 hour since reserved). Deleting cookie."
+          "DEBUG: " + COOKIE_CONFIG.KEY + " expired (more than 1 hour since reserved). Deleting cookie."
         );
-        deleteCookie("cm_order_v1");
+        deleteCookie(COOKIE_CONFIG.KEY);
         return;
       }
 
-      console.log("DEBUG: cm_order_v1 is still valid. Restoring state from cookie.");
+      console.log("DEBUG: " + COOKIE_CONFIG.KEY + " is still valid. Restoring state from cookie.");
       if (itemsCart && typeof itemsCart === "object") {
         dispatch({ type: "REPLACE_CART", cart: itemsCart });
       }
       setSelectedTime(reserved.toISOString());
-      setPaymentOutcome({
-        ok: true,
-        orderId: orderId || null,
-        error: null,
-        receiptUrl: null,
-        displayReserved: displayReserved || formatDisplayReserved(reserved),
+      setPaymentState({
+        ...paymentState,
+        outcome: {
+          ok: true,
+          orderId: orderId || null,
+          error: null,
+          receiptUrl: null,
+          displayReserved: displayReserved || formatDisplayReserved(reserved),
+        },
       });
       dispatch({ type: "GOTO", step: "paymentResult" });
     } catch (e) {
       console.warn("DEBUG: error while restoring cookie:", e);
     }
     // マウント時のみ
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* useEffect: payment step に入ったら order 作成と Square ロードを行う
-     calculateSumPrice, destroyCardIfAny, selectedTime, state.cart を参照するが
-     これらは意図的に _マウント/遷移ベース_ でのみ処理したいため
-     ルールを無効化している（必要な場合は useCallback 等で安定化する）。
-  */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    /* useEffect: payment step に入ったら order 作成と Square ロードを行う
+      calculateSumPrice, destroyCardIfAny, selectedTime, state.cart を参照するが
+      これらは意図的に _マウント/遷移ベース_ でのみ処理したいため
+      ループ防止のため依存配列は限定している。
+    */
   useEffect(() => {
     if (state.step !== "payment") return;
 
-    setPaymentPhase("connecting");
+    setPaymentState(INITIAL_PAYMENT_STATE);
     if (paymentTimerRef.current) clearTimeout(paymentTimerRef.current);
     destroyCardIfAny();
 
@@ -570,10 +522,9 @@ export const App = () => {
         const orderDateLocal = toLocalDateTimeString(new Date(createdAtIso));
         const reservedLocal = toLocalDateTimeString(reservedDate);
 
+        let orderId;
         if (USE_MOCK_PAYMENT) {
-          const mockOrderId = "MOCK-" + Math.floor(Math.random() * 100000);
-          setCurrentOrderId(mockOrderId);
-          setCurrentOrderCreatedAtIso(createdAtIso);
+          orderId = "MOCK-" + Math.floor(Math.random() * 100000);
         } else {
           const orderResp = await Api.createOrder({
             items,
@@ -581,21 +532,21 @@ export const App = () => {
             reservedTime: reservedLocal,
             amount: calculateSumPrice(),
           });
-          const returnedOrderId = orderResp?.orderId;
-          if (!returnedOrderId)
+          orderId = orderResp?.orderId;
+          if (!orderId)
             throw new Error("注文作成に失敗しました (orderId 未取得)");
-          setCurrentOrderId(returnedOrderId);
-          setCurrentOrderCreatedAtIso(createdAtIso);
         }
+
+        setPaymentState({...paymentState, orderId, createdAtIso});
 
         const cfg = await Api.getSquareConfig();
         await loadSquareSdk(cfg?.environment || "PRODUCTION");
-        setPaymentPhase("input");
+        setPaymentState(prevState => ({...prevState, phase: "input"}));
       } catch (e) {
         alert(e?.message || "決済モジュールの初期化に失敗しました");
         dispatch({ type: "GOTO", step: "cart" });
       }
-    }, 500);
+    }, TIMEOUTS.PAYMENT_INIT_DELAY);
 
     return () => {
       if (paymentTimerRef.current) clearTimeout(paymentTimerRef.current);
@@ -603,14 +554,12 @@ export const App = () => {
     };
   }, [state.step, selectedTime, state.cart, calculateSumPrice, destroyCardIfAny]);
 
-  /* useEffect: paymentPhase=input のとき ensureCardMounted を呼ぶ。ensureCardMounted を
-     依存配列に追加するとループするリスクがあるため明示的に無効化しています。
-     （必要なら ensureCardMounted を useCallback 化するのが安全です）
-  */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    /* useEffect: paymentPhase=input のとき ensureCardMounted を呼ぶ。ensureCardMounted を
+      依存配列に追加するとループするリスクがあるため、必要最小限の依存にしている。
+    */
   useEffect(() => {
     if (state.step !== "payment") return;
-    if (paymentPhase !== "input") return;
+    if (paymentState.phase !== "input") return;
 
     const attachTimer = setTimeout(() => {
       (async () => {
@@ -622,17 +571,17 @@ export const App = () => {
           dispatch({ type: "GOTO", step: "cart" });
         }
       })();
-    }, 100);
+    }, TIMEOUTS.CARD_MOUNT_DELAY);
 
     return () => {
       clearTimeout(attachTimer);
     };
-  }, [state.step, paymentPhase, ensureCardMounted]);
+  }, [state.step, paymentState.phase, ensureCardMounted]);
 
   const canUseCookies = async () => {
     try {
-      const key = "__cm_cookie_test";
-      setCookieStr(key, "1", 60);
+      const key = TEMP_COOKIE_TEST_KEY;
+      setCookieStr(key, "1", TIMEOUTS.COOKIE_TEST_TIMEOUT);
       const v = getCookieStr(key);
       deleteCookie(key);
       return v === "1";
@@ -685,8 +634,8 @@ export const App = () => {
     const reservedAtIso = reservedDate.toISOString();
     const amount = calculateSumPrice();
 
-    let orderId = currentOrderId;
-    let createdAtIso = currentOrderCreatedAtIso || new Date().toISOString();
+    let orderId = paymentState.orderId;
+    let createdAtIso = paymentState.createdAtIso || new Date().toISOString();
 
     if (!orderId) {
       if (USE_MOCK_PAYMENT) {
@@ -703,8 +652,7 @@ export const App = () => {
         orderId = orderResp?.orderId;
         if (!orderId) throw new Error("orderIdの発行に失敗しました");
       }
-      setCurrentOrderId(orderId);
-      setCurrentOrderCreatedAtIso(createdAtIso);
+      setPaymentState({...paymentState, orderId, createdAtIso});
     }
 
     try {
@@ -715,19 +663,19 @@ export const App = () => {
       }
 
       if (
-        !billingFamilyName.trim() ||
-        !billingGivenName.trim() ||
-        !billingEmail.trim()
+        !paymentState.billingInfo.familyName.trim() ||
+        !paymentState.billingInfo.givenName.trim() ||
+        !paymentState.billingInfo.email.trim()
       ) {
         throw new Error("氏名とメールアドレスを入力してください。");
       }
-      if (!isValidEmail(billingEmail))
+      if (!isValidEmail(paymentState.billingInfo.email))
         throw new Error("有効なメールアドレスを入力してください。");
 
       const verificationDetails = buildVerificationDetails(amount, {
-        familyName: billingFamilyName,
-        givenName: billingGivenName,
-        email: billingEmail,
+        familyName: paymentState.billingInfo.familyName,
+        givenName: paymentState.billingInfo.givenName,
+        email: paymentState.billingInfo.email,
       });
 
       const result = await cardRef.current.tokenize(verificationDetails);
@@ -758,7 +706,7 @@ export const App = () => {
       if (payment?.status === "COMPLETED") {
         const displayReserved = formatDisplayReserved(reservedDate);
         setCookieJSON(
-          "cm_order_v1",
+          COOKIE_CONFIG.KEY,
           {
             createdAt: createdAtIso,
             reservedAtIso,
@@ -766,34 +714,43 @@ export const App = () => {
             itemsCart: state.cart,
             displayReserved,
           },
-          7 * 24 * 60 * 60
+          COOKIE_CONFIG.MAX_AGE_SEC
         );
 
-        console.log("DEBUG: cm_order_v1 saved:", getCookieJSON("cm_order_v1"));
+        console.log("DEBUG: "+COOKIE_CONFIG.KEY+" saved:", getCookieJSON(COOKIE_CONFIG.KEY));
 
-        setPaymentOutcome({
-          ok: true,
-          orderId,
-          error: null,
-          receiptUrl: payment?.receiptUrl || null,
-          displayReserved,
+        setPaymentState({
+          ...paymentState,
+          outcome: {
+            ok: true,
+            orderId,
+            error: null,
+            receiptUrl: payment?.receiptUrl || null,
+            displayReserved,
+          },
         });
       } else {
-        setPaymentOutcome({
-          ok: false,
-          orderId,
-          error: payment?.error || "決済が承認されませんでした",
-          receiptUrl: null,
-          displayReserved: formatDisplayReserved(reservedDate),
+        setPaymentState({
+          ...paymentState,
+          outcome: {
+            ok: false,
+            orderId,
+            error: payment?.error || "決済が承認されませんでした",
+            receiptUrl: null,
+            displayReserved: formatDisplayReserved(reservedDate),
+          },
         });
       }
     } catch (e) {
-      setPaymentOutcome({
-        ok: false,
-        orderId: orderId || null,
-        error: e?.message || "決済処理中にエラーが発生しました",
-        receiptUrl: null,
-        displayReserved: formatDisplayReserved(reservedDate),
+      setPaymentState({
+        ...paymentState,
+        outcome: {
+          ok: false,
+          orderId: orderId || null,
+          error: e?.message || "決済処理中にエラーが発生しました",
+          receiptUrl: null,
+          displayReserved: formatDisplayReserved(reservedDate),
+        },
       });
     }
     dispatch({ type: "GOTO", step: "paymentResult" });
@@ -1021,16 +978,16 @@ export const App = () => {
         <>
           <div className="reservation-page-wrapper">
             {/* WARNING:本番はtestTimeはfalse、テスト時はgetCurrentTestDate()にする */}
-            <TimeSelect onTimeChange={setSelectedTime} testTime={false} />
+            <TimeSelect onTimeChange={setSelectedTime} testTime={currentTestTime} />
           </div>
         </>
       )}
       {state.step === "payment" && (
         <>
-          {paymentPhase === "connecting" && (
+          {paymentState.phase === "connecting" && (
             <p style={{ marginLeft: "10px" }}>外部決済サービスに接続中...</p>
           )}
-          {paymentPhase === "input" && (
+          {paymentState.phase === "input" && (
             <div style={{ padding: "12px 10px" }}>
               <p style={{ margin: "6px 10px" }}>カード情報の入力</p>
 
@@ -1038,20 +995,20 @@ export const App = () => {
               <div style={{ margin: "6px 10px", marginBottom: 12 }}>
                 <input
                   placeholder="苗字 (例: 山田)"
-                  value={billingFamilyName}
-                  onChange={(e) => setBillingFamilyName(e.target.value)}
+                  value={paymentState.billingInfo.familyName}
+                  onChange={(e) => setPaymentState({...paymentState, billingInfo: {...paymentState.billingInfo, familyName: e.target.value}})}
                   style={{ width: "32%", marginRight: 6 }}
                 />
                 <input
                   placeholder="名前 (例: 太郎)"
-                  value={billingGivenName}
-                  onChange={(e) => setBillingGivenName(e.target.value)}
+                  value={paymentState.billingInfo.givenName}
+                  onChange={(e) => setPaymentState({...paymentState, billingInfo: {...paymentState.billingInfo, givenName: e.target.value}})}
                   style={{ width: "32%", marginRight: 6 }}
                 />
                 <input
                   placeholder="メールアドレス (例: taro@example.com)"
-                  value={billingEmail}
-                  onChange={(e) => setBillingEmail(e.target.value)}
+                  value={paymentState.billingInfo.email}
+                  onChange={(e) => setPaymentState({...paymentState, billingInfo: {...paymentState.billingInfo, email: e.target.value}})}
                   style={{ width: "68%" }}
                 />
                 <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
@@ -1086,19 +1043,19 @@ export const App = () => {
                   opacity: 0.95,
                 };
                 const disabledReason =
-                  !cardAttached ||
-                  !billingFamilyName.trim() ||
-                  !billingGivenName.trim() ||
-                  !billingEmail.trim();
+                  !paymentState.cardAttached ||
+                  !paymentState.billingInfo.familyName.trim() ||
+                  !paymentState.billingInfo.givenName.trim() ||
+                  !paymentState.billingInfo.email.trim();
 
                 return (
                   <button
-                    style={isSubmitting ? processingBtnStyle : baseBtnStyle}
-                    disabled={isSubmitting || disabledReason}
-                    aria-disabled={isSubmitting || disabledReason}
+                    style={paymentState.isSubmitting ? processingBtnStyle : baseBtnStyle}
+                    disabled={paymentState.isSubmitting || disabledReason}
+                    aria-disabled={paymentState.isSubmitting || disabledReason}
                     onClick={async () => {
-                      if (isSubmitting) return; // 二重ガード
-                      setIsSubmitting(true);
+                      if (paymentState.isSubmitting) return; // 二重ガード
+                      setPaymentState({...paymentState, isSubmitting: true});
                       try {
                         await handleSubmitOrderFlow();
                       } catch (e) {
@@ -1106,11 +1063,11 @@ export const App = () => {
                         alert(e?.message || "決済でエラーが発生しました");
                       } finally {
                         // 成功時は画面遷移でアンマウントされるため無害。
-                        setIsSubmitting(false);
+                        setPaymentState({...paymentState, isSubmitting: false});
                       }
                     }}
                   >
-                    {isSubmitting ? (
+                    {paymentState.isSubmitting ? (
                       <>
                         <span
                           style={{
@@ -1142,7 +1099,7 @@ export const App = () => {
       {
         state.step === "paymentResult" && (
           <>
-            {paymentOutcome.ok ? (
+            {paymentState.outcome.ok ? (
               <div style={{ padding: "12px" }}>
                 <p
                   style={{
@@ -1155,12 +1112,12 @@ export const App = () => {
                   決済が完了しました
                 </p>
                 <p style={{ textAlign: "center", fontSize: 18, margin: "6px" }}>
-                  注文番号：<b>{paymentOutcome.orderId}</b>
+                  注文番号：<b>{paymentState.outcome.orderId}</b>
                 </p>
-                {paymentOutcome.receiptUrl && (
+                {paymentState.outcome.receiptUrl && (
                   <p style={{ textAlign: "center", margin: "6px" }}>
                     <a
-                      href={paymentOutcome.receiptUrl}
+                      href={paymentState.outcome.receiptUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -1190,19 +1147,19 @@ export const App = () => {
                 >
                   決済に失敗しました
                 </p>
-                {paymentOutcome.orderId && (
+                {paymentState.outcome.orderId && (
                   <p
                     style={{ textAlign: "center", fontSize: 24, margin: "18px" }}
                   >
                     予約時刻：
                     <b>
-                      {paymentOutcome.displayReserved ??
+                      {paymentState.outcome.displayReserved ??
                         formatReservedTimeHHmm(parseReservedToDate(selectedTime))}
                     </b>
                   </p>
                 )}
                 <p style={{ textAlign: "center", fontSize: 16, margin: "6px" }}>
-                  {paymentOutcome.error || "不明なエラー"}
+                  {paymentState.outcome.error || "不明なエラー"}
                 </p>
                 <div style={{ textAlign: "center", marginTop: 16 }}>
                   <button
@@ -1213,13 +1170,7 @@ export const App = () => {
                       marginRight: 10,
                     }}
                     onClick={() => {
-                      setPaymentOutcome({
-                        ok: false,
-                        orderId: null,
-                        error: null,
-                        receiptUrl: null,
-                        displayReserved: null,
-                      });
+                      setPaymentState({...paymentState, outcome: {ok: false, orderId: null, error: null, receiptUrl: null, displayReserved: null}});
                       dispatch({ type: "GOTO", step: "cart" });
                     }}
                   >
@@ -1228,13 +1179,7 @@ export const App = () => {
                   <button
                     style={{ width: 160, height: 44, fontSize: 18 }}
                     onClick={() => {
-                      setPaymentOutcome({
-                        ok: false,
-                        orderId: null,
-                        error: null,
-                        receiptUrl: null,
-                        displayReserved: null,
-                      });
+                      setPaymentState({...paymentState, outcome: {ok: false, orderId: null, error: null, receiptUrl: null, displayReserved: null}});
                       dispatch({ type: "GOTO", step: "payment" });
                     }}
                   >
@@ -1276,11 +1221,11 @@ export const App = () => {
                 margin: "2px",
               }}
             >
-              {paymentOutcome.orderId ?? "NNNNN"}
+              {paymentState.outcome.orderId ?? "NNNNN"}
             </p>
-            {paymentOutcome.displayReserved && (
+            {paymentState.outcome.displayReserved && (
               <p style={{ textAlign: "center", fontSize: 24, margin: "16px 0" }}>
-                予約日時：{paymentOutcome.displayReserved}
+                予約日時：{paymentState.outcome.displayReserved}
               </p>
             )}
             <Order cart={state.cart} price={prices} names={itemNames} />
@@ -1301,7 +1246,7 @@ export const App = () => {
               goto={goto}
               currentStep={state.step}
               //WARNING:本番はtestTimeはfalse、テスト時はgetCurrentTestDate()にする
-              testTime={false}
+              testTime={currentTestTime}
               numOfChosenMenu={calculateSumInMenu()}
               numOfOrderedDrinks={calculateNumberOfDrinksInMenu()}
               difference={calculateDifferenceOfDrinks()}

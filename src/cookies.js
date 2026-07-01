@@ -18,8 +18,8 @@ function shouldUseSecureFlag() {
   }
 }
 
-export const setCookieStr = (k, v, maxAgeSec = 12 * 60 * 60) => {
-  // maxAgeSec は秒数を期待
+export const setCookieStr = (k, v, maxAgeSec = 60 * 60) => {
+  // maxAgeSec は秒数を期待（デフォルト: 1時間 = 3,600秒）
   const secureFlag = shouldUseSecureFlag() ? "; Secure" : "";
   // Path と SameSite は常に付ける（SameSite=Lax は通常の遷移で送られる）
   document.cookie = `${encode(k)}=${encode(v)}; Max-Age=${Number(
@@ -41,7 +41,7 @@ export const deleteCookie = (k) => {
   )}=; Max-Age=0; Path=/; SameSite=Lax${secureFlag}`;
 };
 
-export const setCookieJSON = (k, obj, maxAgeSec = 12 * 60 * 60) => {
+export const setCookieJSON = (k, obj, maxAgeSec = 60 * 60) => {
   setCookieStr(k, JSON.stringify(obj), maxAgeSec);
 };
 

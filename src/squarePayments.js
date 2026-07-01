@@ -1,8 +1,7 @@
-export async function loadSquareSdk(env = "PRODUCTION") {
-  const SRC =
-    env === "SANDBOX"
-      ? "https://sandbox.web.squarecdn.com/v1/square.js"
-      : "https://web.squarecdn.com/v1/square.js";
+import { SQUARE_ENVIRONMENT, SQUARE_SDK_URLS } from "./constants/config";
+
+export async function loadSquareSdk(env = SQUARE_ENVIRONMENT.PRODUCTION) {
+  const SRC = SQUARE_SDK_URLS[env];
 
   if (window.Square) {
     console.log("[square] SDK already present");
