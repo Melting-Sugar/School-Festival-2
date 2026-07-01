@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import { RESERVATION_CONFIG } from "../constants/config";
 
 // 定数
@@ -57,25 +57,25 @@ export const TimeSelect = ({ onTimeChange, testTime }) => {
     return testTime || new Date();
   }, [testTime]);
   const timeOptions = useMemo(() => generateTimeOptions(now), [now]);
+  const initialTimeRef = useRef(timeOptions[0]?.value || null);
 
   //現在時刻をフォーマット
   const currentHour = String(now.getHours()).padStart(2, "0");
   const currentMinutes = String(now.getMinutes()).padStart(2, "0");
   const formattedTime = `${currentHour}:${currentMinutes}`;
 
-  // ← 修正: render中に onTimeChange を直接呼ばない
-  // マウント時 / timeOptions が変わったときに一度だけ呼ぶ
+  // 初回マウント時だけ親へ初期値を通知する。
+  // 再レンダリングのたびに呼ぶと、ユーザー選択を先頭値で上書きしてしまう。
   useEffect(() => {
-    if (timeOptions.length > 0 && typeof onTimeChange === "function") {
+    if (initialTimeRef.current && typeof onTimeChange === "function") {
       try {
-        onTimeChange(timeOptions[0].value);
+        onTimeChange(initialTimeRef.current);
       } catch (e) {
         // 親が同期的にエラーを投げても無視してループを防ぐ
         console.warn("TimeSelect: onTimeChange threw:", e);
       }
     }
-    // onTimeChange は通常は安定（setState）だが、念のため依存に入れておく
-  }, [timeOptions, onTimeChange]);
+  }, [onTimeChange]);
 
   if (timeOptions.length === 0) {
     return (

@@ -1,4 +1,4 @@
-import { ORDER_ALLOWED_IDS } from "./constants/items";
+import { ORDER_ALLOWED_IDS } from "../constants/items";
 
 const ALLOWED_IDS = new Set(ORDER_ALLOWED_IDS);
 

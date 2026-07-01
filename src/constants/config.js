@@ -42,6 +42,13 @@ export const SQUARE_SDK_URLS = {
   SANDBOX: "https://sandbox.web.squarecdn.com/v1/square.js",
 };
 
+// Square の fallback 設定は環境変数から読む。
+export const SQUARE_FALLBACK_CONFIG = {
+  applicationId: process.env.REACT_APP_SQUARE_APP_ID || "",
+  locationId: process.env.REACT_APP_SQUARE_LOCATION_ID || "",
+  environment: (process.env.REACT_APP_SQUARE_ENV || "SANDBOX").toUpperCase(),
+};
+
 // 在庫取得対象ID
 export const SOLDOUT_FETCH_IDS = [10, 20, 91, 92, 93, 94];
 
@@ -58,5 +65,5 @@ export const TEST_DATE = new Date(2025, 8, 22, 12, 0, 0);
 export const TEMP_COOKIE_TEST_KEY = "__cm_cookie_test";
 
 // テスト実行スイッチ
-export const USE_MOCK_PAYMENT = false;
-export const USE_TEST_TIME = false;
+export const USE_MOCK_PAYMENT = true;
+export const USE_TEST_TIME = true;

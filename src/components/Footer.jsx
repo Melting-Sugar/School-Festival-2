@@ -13,13 +13,6 @@ export const Footer = ({
   const isAfterLastOrder =
     now.getHours() > RESERVATION_CONFIG.LAST_ORDER_HOUR ||
     (now.getHours() === RESERVATION_CONFIG.LAST_ORDER_HOUR && now.getMinutes() >= RESERVATION_CONFIG.LAST_ORDER_MINUTE);
-  console.log("Footer now/testTime:", { now, testTime, isAfterLastOrder });
-  console.log("Footer now/testTime:", {
-    now: now.toString(),
-    nowHours: now.getHours(),
-    nowMinutes: now.getMinutes(),
-    testTime: testTime ? testTime.toString() : testTime,
-  });
 
   const isNextDisabled = () => {
     if (currentStep === "menu" && numOfChosenMenu === 0) {
