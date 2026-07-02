@@ -1,6 +1,6 @@
-import { useCallback, useReducer } from "react";
+import { useCallback, useReducer, useState } from "react";
 
-import { INITIAL_APP_STATE } from "../constants/initialState";
+import { INITIAL_APP_STATE, INITIAL_UI_STATE } from "../constants/initialState";
 import {
   PRODUCT_CATEGORIES,
   DRINK_TYPE_IDS,
@@ -143,6 +143,7 @@ export const screenState = (state, action) => {
 
 export function useAppFlow() {
   const [state, dispatch] = useReducer(screenState, INITIAL_APP_STATE);
+  const [selectedTime, setSelectedTime] = useState(INITIAL_UI_STATE.selectedTime);
 
   const goto = useCallback((step) => {
     dispatch({ type: "GOTO", step });
@@ -183,5 +184,15 @@ export function useAppFlow() {
     dispatch({ type: "REMOVE_ITEM", itemId });
   }, []);
 
-  return { state, dispatch, goto, next, prev, addItems, removeItems };
+  return {
+    state,
+    dispatch,
+    goto,
+    next,
+    prev,
+    addItems,
+    removeItems,
+    selectedTime,
+    setSelectedTime,
+  };
 }

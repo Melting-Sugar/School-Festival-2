@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { INITIAL_PAYMENT_STATE } from "../constants/initialState";
 import { COOKIE_CONFIG, TIMEOUTS, TEMP_COOKIE_TEST_KEY, USE_MOCK_PAYMENT } from "../constants/config";
@@ -9,15 +9,8 @@ import { deleteCookie, getCookieJSON, getCookieStr, setCookieJSON, setCookieStr 
 import { formatDisplayReserved, toLocalDateTimeString } from "../utils/dateFormat";
 import { isValidEmail } from "../utils/validation";
 
-export function usePaymentFlow({
-  step,
-  cart,
-  selectedTime,
-  paymentState,
-  setPaymentState,
-  dispatch,
-  calculateSumPrice,
-}) {
+export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSumPrice }) {
+  const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
   const paymentTimerRef = useRef(null);
   const cardRef = useRef(null);
 
@@ -37,7 +30,7 @@ export function usePaymentFlow({
       clearCardContainer();
       setPaymentState((prev) => ({ ...prev, cardAttached: false }));
     }
-  }, [clearCardContainer, setPaymentState]);
+  }, [clearCardContainer]);
 
   const canUseCookies = useCallback(async () => {
     try {
@@ -69,12 +62,7 @@ export function usePaymentFlow({
         });
       }
 
-      async function tryAttach(
-        card,
-        selector = "#card-container",
-        tries = 4,
-        delayMs = 300
-      ) {
+      async function tryAttach(card, selector = "#card-container", tries = 4, delayMs = 300) {
         for (let i = 0; i < tries; i++) {
           try {
             await card.attach(selector);
@@ -136,7 +124,7 @@ export function usePaymentFlow({
         setPaymentState((prev) => ({ ...prev, cardAttached: true }));
       }
     },
-    [destroyCardIfAny, setPaymentState]
+    [destroyCardIfAny]
   );
 
   const buildVerificationDetails = useCallback((amountYen, billingContact) => {
@@ -325,7 +313,6 @@ export function usePaymentFlow({
     ensureCardMounted,
     buildVerificationDetails,
     dispatch,
-    setPaymentState,
   ]);
 
   useEffect(() => {
@@ -380,7 +367,7 @@ export function usePaymentFlow({
       if (paymentTimerRef.current) clearTimeout(paymentTimerRef.current);
       destroyCardIfAny();
     };
-  }, [step, selectedTime, cart, calculateSumPrice, destroyCardIfAny, dispatch, setPaymentState]);
+  }, [step, selectedTime, cart, calculateSumPrice, destroyCardIfAny, dispatch]);
 
   useEffect(() => {
     if (step !== "payment") return;
@@ -403,14 +390,5 @@ export function usePaymentFlow({
     };
   }, [step, paymentState.phase, ensureCardMounted, dispatch]);
 
-  return {
-    paymentTimerRef,
-    cardRef,
-    clearCardContainer,
-    destroyCardIfAny,
-    ensureCardMounted,
-    canUseCookies,
-    buildVerificationDetails,
-    handleSubmitOrderFlow,
-  };
+  return { paymentState, setPaymentState, handleSubmitOrderFlow };
 }
