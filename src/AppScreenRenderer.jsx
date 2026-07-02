@@ -13,7 +13,6 @@ const shouldShowFooter = (step) => {
   return (
     step !== "payment" &&
     step !== "paymentResult" &&
-    step !== "complete" &&
     step !== "title" &&
     step !== "numberTag"
   );
