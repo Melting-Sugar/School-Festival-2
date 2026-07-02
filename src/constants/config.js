@@ -1,0 +1,69 @@
+// API エンドポイント
+export const API_ENDPOINTS = {
+  SQUARE_CONFIG: "/api/square/config",
+  ITEM_BY_ID: (itemId) => `/api/items/get/byitemId/${itemId}`,
+  ORDER_CREATE: "/api/order/set",
+  PAYMENT_CHARGE: (orderId, sourceId) => 
+    `/api/payment/create/${orderId}/${encodeURIComponent(sourceId)}`,
+  ORDER_GET: (orderId) => `/api/order/get/byorderId/${orderId}`,
+};
+
+// タイムアウト・遅延設定
+export const TIMEOUTS = {
+  CARD_ATTACH_WAIT: 8000,      // ms
+  CARD_ATTACH_INTERVAL: 50,    // ms
+  PAYMENT_INIT_DELAY: 500,     // ms
+  CARD_MOUNT_DELAY: 100,       // ms
+  COOKIE_TEST_TIMEOUT: 60,     // s
+};
+
+// リトライ設定
+export const RETRY_CONFIG = {
+  CARD_ATTACH_TRIES: 4,
+  CARD_ATTACH_DELAY: 300,  // ms
+};
+
+// Cookie 設定
+export const COOKIE_CONFIG = {
+  KEY: "cm_order_v1",
+  MAX_AGE_SEC: 7 * 24 * 60 * 60,      // 7日
+  RESERVATION_VALID_DURATION_MS: 60 * 60 * 1000,  // 1時間
+};
+
+// Square SDK 環境
+export const SQUARE_ENVIRONMENT = {
+  PRODUCTION: "PRODUCTION",
+  SANDBOX: "SANDBOX",
+};
+
+// Square SDK URLs（環境キーでアクセス）
+export const SQUARE_SDK_URLS = {
+  PRODUCTION: "https://web.squarecdn.com/v1/square.js",
+  SANDBOX: "https://sandbox.web.squarecdn.com/v1/square.js",
+};
+
+// Square の fallback 設定は環境変数から読む。
+export const SQUARE_FALLBACK_CONFIG = {
+  applicationId: process.env.REACT_APP_SQUARE_APP_ID || "",
+  locationId: process.env.REACT_APP_SQUARE_LOCATION_ID || "",
+  environment: (process.env.REACT_APP_SQUARE_ENV || "SANDBOX").toUpperCase(),
+};
+
+// 在庫取得対象ID
+export const SOLDOUT_FETCH_IDS = [10, 20, 91, 92, 93, 94];
+
+// 予約時間設定
+export const RESERVATION_CONFIG = {
+  START_OFFSET_MINUTES: 10,
+  LAST_ORDER_HOUR: 17,
+  LAST_ORDER_MINUTE: 10,
+  INTERVAL_MINUTES: 5,
+};
+
+// テスト用固定値
+export const TEST_DATE = new Date(2025, 8, 22, 12, 0, 0);
+export const TEMP_COOKIE_TEST_KEY = "__cm_cookie_test";
+
+// テスト実行スイッチ
+export const USE_MOCK_PAYMENT = true;
+export const USE_TEST_TIME = true;

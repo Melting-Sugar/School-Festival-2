@@ -1,5 +1,4 @@
-const LAST_ORDER_HOUR = 17;
-const LAST_ORDER_MIN = 0;
+import { RESERVATION_CONFIG } from "../constants/config";
 
 export const Footer = ({
   sumPrice,
@@ -12,15 +11,8 @@ export const Footer = ({
 }) => {
   const now = testTime || new Date();
   const isAfterLastOrder =
-    now.getHours() > LAST_ORDER_HOUR ||
-    (now.getHours() === LAST_ORDER_HOUR && now.getMinutes() >= LAST_ORDER_MIN);
-  console.log("Footer now/testTime:", { now, testTime, isAfterLastOrder });
-  console.log("Footer now/testTime:", {
-    now: now.toString(),
-    nowHours: now.getHours(),
-    nowMinutes: now.getMinutes(),
-    testTime: testTime ? testTime.toString() : testTime,
-  });
+    now.getHours() > RESERVATION_CONFIG.LAST_ORDER_HOUR ||
+    (now.getHours() === RESERVATION_CONFIG.LAST_ORDER_HOUR && now.getMinutes() >= RESERVATION_CONFIG.LAST_ORDER_MINUTE);
 
   const isNextDisabled = () => {
     if (currentStep === "menu" && numOfChosenMenu === 0) {

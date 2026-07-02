@@ -1,23 +1,31 @@
-// Order.jsx
+import {
+  PRODUCT_CATEGORIES,
+  SET_DRINK_SUBITEM_MAP,
+  ORDER_DISPLAY_SEQUENCE,
+  isSetItemBreakdownId,
+  SINGLE_DRINK_ID_START,
+  SINGLE_DRINK_ID_END,
+  DRINK_TYPE_BASE,
+  DRINK_TYPE_MOD,
+} from "../constants/items";
+
 export const Order = ({ cart = {}, price = {}, names = {} }) => {
-  // 表示順：10 → 20 → 40 → 41 → 42 → 43 → 44 → 50 → 51 → 52 → 53 → 54 → 30 → 31 → 32 → 33 → 34
-  const displayOrder = [
-    10, 20, 40, 41, 42, 43, 44, 50, 51, 52, 53, 54, 30, 31, 32, 33, 34,
-  ];
+  // 表示順：PORK_SINGLE → PORK_SINGLE_LARGE → PORK_DRINK_SET → SET内訳 → PORK_DRINK_SET_LARGE → SET_LARGE内訳 → DRINK_SINGLE → SINGLE内訳
+  const displayOrder = ORDER_DISPLAY_SEQUENCE;
 
   let totalItems = 0; // ※セット内訳(41-44,51-54,31-34)は合計から除外
   let totalPrice = 0;
 
   const rows = [];
 
-  const isSetDrink = (id) => (id >= 41 && id <= 44) || (id >= 51 && id <= 54);
-  const isSubOf30 = (id) => id >= 31 && id <= 34; // ← 30の内訳も“セット風”表示にする
+  const isSetDrink = (id) => isSetItemBreakdownId(id);
+  const isSubOf30 = (id) => id >=SINGLE_DRINK_ID_START && id <= SINGLE_DRINK_ID_END; // ← 30の内訳も"セット風"表示にする
 
   const getLabel = (id) => {
-    // 31-34 / 41-44 / 51-54 は 91-94 の名前を流用
+    // 内部的に商品IDが31-34, 41-44, 41-54の場合、91-94の名前（ドリンク）を流用
     if (isSubOf30(id) || isSetDrink(id)) {
-      const drinkIndex = id % 10; // 1..4
-      const drinkId = 90 + drinkIndex; // 91..94
+      const drinkIndex = id % DRINK_TYPE_MOD; // 1..4
+      const drinkId = DRINK_TYPE_BASE + drinkIndex; // 91..94
       return names[drinkId] ?? `ドリンク ${drinkIndex}`;
     }
     return names[id] ?? `商品 ${id}`;
@@ -99,8 +107,7 @@ const setRowStyle = {
 };
 
 const rightLineStyle = {
+  margin: "6px",
   textAlign: "right",
-  margin: "6px 10px 6px 6px",
-  fontSize: "20px",
-  fontWeight: "bold",
+  fontSize: "18px",
 };

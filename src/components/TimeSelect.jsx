@@ -1,24 +1,24 @@
-import React, { useMemo, useEffect } from "react";
-
+import React, { useMemo, useEffect, useRef } from "react";
+import { RESERVATION_CONFIG } from "../constants/config";
 
 // 定数
-const START_OFFSET_MINUTES = 10;
-const LAST_ORDER_HOUR = 17
-const LAST_ORDER_MINUTE = 10;
-const INTERVAL_MINUTES = 5;
+// const START_OFFSET_MINUTES = 10;
+// const LAST_ORDER_HOUR = 17
+// const LAST_ORDER_MINUTE = 10;
+// const INTERVAL_MINUTES = 5;
 
 //予約可能な時刻オプションの配列を生成する関数
 const generateTimeOptions = (now) => {
   const startTargetTime = new Date(
-    now.getTime() + START_OFFSET_MINUTES * 60000
+    now.getTime() + RESERVATION_CONFIG.START_OFFSET_MINUTES * 60000
   );
 
   const minutes = startTargetTime.getMinutes();
-  const minutesToRound = minutes % INTERVAL_MINUTES;
+  const minutesToRound = minutes % RESERVATION_CONFIG.INTERVAL_MINUTES;
 
   let roundedMinutes = minutes;
   if (minutesToRound !== 0) {
-    roundedMinutes = minutes + (INTERVAL_MINUTES - minutesToRound);
+    roundedMinutes = minutes + (RESERVATION_CONFIG.INTERVAL_MINUTES - minutesToRound);
   }
 
   const startTime = new Date(startTargetTime);
@@ -34,8 +34,8 @@ const generateTimeOptions = (now) => {
     const currentMinutes = currentTime.getMinutes();
 
     if (
-      currentHour > LAST_ORDER_HOUR ||
-      (currentHour === LAST_ORDER_HOUR && currentMinutes > LAST_ORDER_MINUTE)
+      currentHour > RESERVATION_CONFIG.LAST_ORDER_HOUR ||
+      (currentHour === RESERVATION_CONFIG.LAST_ORDER_HOUR && currentMinutes > RESERVATION_CONFIG.LAST_ORDER_MINUTE)
     ) {
       break;
     }
@@ -45,7 +45,7 @@ const generateTimeOptions = (now) => {
     ).padStart(2, "0")}`;
     options.push({ value: timeString, label: timeString });
 
-    currentTime = new Date(currentTime.getTime() + INTERVAL_MINUTES * 60000);
+    currentTime = new Date(currentTime.getTime() + RESERVATION_CONFIG.INTERVAL_MINUTES * 60000);
   }
 
   return options;
@@ -57,25 +57,25 @@ export const TimeSelect = ({ onTimeChange, testTime }) => {
     return testTime || new Date();
   }, [testTime]);
   const timeOptions = useMemo(() => generateTimeOptions(now), [now]);
+  const initialTimeRef = useRef(timeOptions[0]?.value || null);
 
   //現在時刻をフォーマット
   const currentHour = String(now.getHours()).padStart(2, "0");
   const currentMinutes = String(now.getMinutes()).padStart(2, "0");
   const formattedTime = `${currentHour}:${currentMinutes}`;
 
-  // ← 修正: render中に onTimeChange を直接呼ばない
-  // マウント時 / timeOptions が変わったときに一度だけ呼ぶ
+  // 初回マウント時だけ親へ初期値を通知する。
+  // 再レンダリングのたびに呼ぶと、ユーザー選択を先頭値で上書きしてしまう。
   useEffect(() => {
-    if (timeOptions.length > 0 && typeof onTimeChange === "function") {
+    if (initialTimeRef.current && typeof onTimeChange === "function") {
       try {
-        onTimeChange(timeOptions[0].value);
+        onTimeChange(initialTimeRef.current);
       } catch (e) {
         // 親が同期的にエラーを投げても無視してループを防ぐ
         console.warn("TimeSelect: onTimeChange threw:", e);
       }
     }
-    // onTimeChange は通常は安定（setState）だが、念のため依存に入れておく
-  }, [timeOptions, onTimeChange]);
+  }, [onTimeChange]);
 
   if (timeOptions.length === 0) {
     return (
@@ -98,7 +98,11 @@ export const TimeSelect = ({ onTimeChange, testTime }) => {
         onChange={(e) => {
           // 変更があったら、Propsとして渡された親の関数を呼び出す
           if (onTimeChange) {
-            onTimeChange(e.target.value);
+            try {
+              onTimeChange(e.target.value);
+            } catch (e) {
+              console.warn("TimeSelect: onTimeChange threw:", e);
+            }
           }
         }}
         style={selectStyle}
@@ -113,46 +117,35 @@ export const TimeSelect = ({ onTimeChange, testTime }) => {
   );
 };
 
-// --- スタイル---
-
-const titleStyle = {
+const containerStyle = {
+  padding: "20px",
   textAlign: "center",
-  fontSize: "22px",
-  fontWeight: "bold",
-  marginTop: "16px",
 };
 
-const containerStyle = {
-  padding: "16px",
-  fontFamily: "Arial, sans-serif",
-  maxWidth: "400px",
-  margin: "0 auto",
+const titleStyle = {
+  fontSize: "22px",
+  fontWeight: "bold",
+  margin: "10px auto",
+};
+
+const currentTimeStyle = {
+  fontSize: "16px",
+  margin: "10px auto",
+  color: "#666",
 };
 
 const labelStyle = {
   display: "block",
-  marginBottom: "8px",
   fontSize: "16px",
+  margin: "16px auto 8px",
+  fontWeight: "bold",
 };
 
 const selectStyle = {
-  width: "100%",
-  padding: "12px",
-  fontSize: "18px",
-  border: "1px solid #ccc",
-  borderRadius: "8px",
-  minHeight: "48px",
-  appearance: "none",
-  WebkitAppearance: "none",
-};
-
-const currentTimeStyle = {
-  textAlign: "center",
-  fontSize: "18px",
-  fontWeight: "bold",
-  color: "#333",
-  marginBottom: "20px",
-  padding: "8px",
-  backgroundColor: "#eaeaea",
+  fontSize: "16px",
+  padding: "8px 12px",
+  margin: "8px auto",
   borderRadius: "4px",
+  border: "1px solid #ccc",
+  width: "200px",
 };

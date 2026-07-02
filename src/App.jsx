@@ -1,1294 +1,128 @@
 import "./styles.css";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useRef, useState } from "react";
 
-import { useReducer } from "react";
 import { Header } from "./components/Header";
-import { Title } from "./components/Title";
-import { Menu } from "./components/Menu";
-import { Order } from "./components/Order";
 import { Footer } from "./components/Footer";
-import { TimeSelect } from "./components/TimeSelect";
-import { loadSquareSdk } from "./squarePayments";
-import { Api } from "./api";
-import {
-  buildOrderItems,
-  formatReservedTimeHHmm,
-  parseReservedToDate,
-} from "./orderUtils";
-import {
-  setCookieJSON,
-  getCookieJSON,
-  setCookieStr,
-  getCookieStr,
-  deleteCookie,
-} from "./cookies";
-import img_10 from "../src/image/img_10.jpg";
-import img_20 from "../src/image/img_20.jpg";
-import img_30 from "../src/image/img_30.jpg";
-import img_40 from "../src/image/img_40.jpg";
-import img_50 from "../src/image/img_50.jpg";
-import img_91 from "../src/image/img_91.jpg";
-import img_92 from "../src/image/img_92.jpg";
-import img_93 from "../src/image/img_93.jpg";
-import img_94 from "../src/image/img_94.jpg";
+import { useAppFlow } from "./hooks/useAppFlow";
+import { useOrderSummary } from "./hooks/useOrderSummary";
+import { useSoldout } from "./hooks/useSoldout";
+import { useCookieRestore } from "./hooks/useCookieRestore";
+import { usePaymentFlow } from "./hooks/usePaymentFlow";
+import { TitlePage } from "./pages/TitlePage";
+import { MenuPage } from "./pages/MenuPage";
+import { DrinkPage } from "./pages/DrinkPage";
+import { CartPage } from "./pages/CartPage";
+import { TimePage } from "./pages/TimePage";
+import { PaymentPage } from "./pages/PaymentPage";
+import { PaymentResultPage } from "./pages/PaymentResultPage";
+import { NumberTagPage } from "./pages/NumberTagPage";
+import { PRICES, ITEM_NAMES } from "./constants/items";
+import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
+import { INITIAL_UI_STATE, INITIAL_PAYMENT_STATE } from "./constants/initialState";
 
-
-/* ブラウザコンソールで Api.getSquareConfig() を叩けるようにする */
-// WARNING:テストの後は消す
-// window.Api = Api;
-
-/* バック連携前用のMOCKスイッチ（本番は false に戻す） */
-const USE_MOCK_PAYMENT = false;
-
-/* ------ 変数や定数 ------ */
-
-const steps = [
-  "title",
-  "menu",
-  "drink",
-  "cart",
-  "time",
-  "payment",
-  "paymentResult",
-  "numberTag",
-];
-
-/* 値段 */
-const prices = {
-  10: 470,
-  20: 670,
-  30: 150,
-  40: 570,
-  50: 770,
-};
-
-const itemNames = {
-  10: "角煮 単品",
-  20: "角煮大盛り 単品",
-  30: "ドリンク 単品",
-  40: "【お得】角煮ドリンクセット",
-  50: "【お得】角煮ドリンクセット大盛り",
-  91: "コーラ",
-  92: "なっちゃんオレンジ",
-  93: "三ツ矢サイダー",
-  94: "烏龍茶",
-};
-
-/* 初期値 */
-const initialState = {
-  step: "title",
-  cart: {
-    91: 0,
-    92: 0,
-    93: 0,
-    94: 0,
-    30: 0,
-    40: 0,
-    50: 0,
-
-    10: 0,
-    20: 0,
-    31: 0,
-    32: 0,
-    33: 0,
-    34: 0,
-    41: 0,
-    42: 0,
-    43: 0,
-    44: 0,
-    51: 0,
-    52: 0,
-    53: 0,
-    54: 0,
-  },
-};
-
-/* テスト時にSOLDOUT判定にしないための日付 */
-const testDate = new Date(2025, 8, 22, 12, 0, 0);
-const appStartTime = Date.now();
-function getCurrentTestDate() {
-  const elapsedMs = Date.now() - appStartTime; // 経過ミリ秒
-  return new Date(testDate.getTime() + elapsedMs);
-}
-
-
-/* helper: format Date -> "yyyy-MM-dd'T'HH:mm:ss" (LocalDateTime style, no Z) */
-function toLocalDateTimeString(d) {
-  const D = new Date(d);
-  const p = (n) => String(n).padStart(2, "0");
-  return `${D.getFullYear()}-${p(D.getMonth() + 1)}-${p(D.getDate())}T${p(
-    D.getHours()
-  )}:${p(D.getMinutes())}:${p(D.getSeconds())}`;
-}
-
-/* helper: display-friendly reserved datetime "YYYY-MM-DD HH:mm" */
-function formatDisplayReserved(d) {
-  const D = new Date(d);
-  const p = (n) => String(n).padStart(2, "0");
-  return `${D.getFullYear()}-${p(D.getMonth() + 1)}-${p(D.getDate())} ${p(
-    D.getHours()
-  )}:${p(D.getMinutes())}`;
-}
-
-/* ------ ScreenStateの動作定義 ------ */
-const screenState = (state, action) => {
-  switch (action.type) {
-    case "GOTO":
-      if (!steps.includes(action.step)) return state;
-      return { ...state, step: action.step };
-    case "NEXT": {
-      const currentIndex = steps.indexOf(state.step);
-      if (currentIndex === -1) return state;
-      if (currentIndex < steps.length - 1) {
-        const nextStep = steps[currentIndex + 1];
-        return { ...state, step: nextStep };
-      }
-      return state;
-    }
-    case "PREV": {
-      const currentIndex = steps.indexOf(state.step);
-      if (currentIndex === -1) return state;
-      if (currentIndex > 0) {
-        const prevStep = steps[currentIndex - 1];
-        return { ...state, step: prevStep };
-      }
-      return state;
-    }
-    case "ADD_ITEM": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      return {
-        ...state,
-        cart: {
-          ...state.cart,
-          [itemId]: currentCount + 1,
-        },
-      };
-    }
-    case "REMOVE_ITEM": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      if (currentCount > 0) {
-        return {
-          ...state,
-          cart: {
-            ...state.cart,
-            [itemId]: currentCount - 1,
-          },
-        };
-      }
-      return state;
-    }
-    case "ADD_DRINK": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      return {
-        ...state,
-        cart: {
-          ...state.cart,
-          [itemId]: currentCount + 1,
-        },
-      };
-    }
-    case "REMOVE_DRINK": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      if (currentCount > 0) {
-        return {
-          ...state,
-          cart: {
-            ...state.cart,
-            [itemId]: currentCount - 1,
-          },
-        };
-      }
-      return state;
-    }
-    case "CLEAR_TEMPORARY_DRINKS": {
-      const newCart = { ...state.cart };
-      newCart[91] = 0;
-      newCart[92] = 0;
-      newCart[93] = 0;
-      newCart[94] = 0;
-      return { ...state, cart: newCart };
-    }
-    case "DELETE_TEMPORARY": {
-      const newCart = { ...state.cart };
-      newCart[30] = 0;
-      newCart[40] = 0;
-      newCart[50] = 0;
-      return { ...state, cart: newCart };
-    }
-    case "ORGANIZE_CART": {
-      const cart = state.cart;
-      const newCart = { ...cart };
-      let sumM = newCart[40] || 0;
-      let sumL = newCart[50] || 0;
-      for (let i = 31; i <= 34; i++) newCart[i] = 0;
-      for (let i = 41; i <= 44; i++) newCart[i] = 0;
-      for (let i = 51; i <= 54; i++) newCart[i] = 0;
-
-      for (let d = 91; d <= 94; d++) {
-        const drinkNo = d - 90; // 1..4
-        let qty = newCart[d] || 0;
-        const takeM = Math.min(qty, sumM);
-        if (takeM > 0) {
-          const target = 40 + drinkNo; // 41–44
-          newCart[target] = (newCart[target] || 0) + takeM;
-          sumM -= takeM;
-          qty -= takeM;
-        }
-        const takeL = Math.min(qty, sumL);
-        if (takeL > 0) {
-          const target = 50 + drinkNo; // 51–54
-          newCart[target] = (newCart[target] || 0) + takeL;
-          sumL -= takeL;
-          qty -= takeL;
-        }
-        if (qty > 0) {
-          const target = 30 + drinkNo; // 31–34
-          newCart[target] = (newCart[target] || 0) + qty;
-          qty = 0;
-        }
-      }
-      return { ...state, cart: newCart };
-    }
-    case "REPLACE_CART": {
-      return { ...state, cart: { ...state.cart, ...action.cart } };
-    }
-    default:
-      return state;
-  }
-};
-
-/* ------ 本体 ------ */
+const prices = PRICES;
+const itemNames = ITEM_NAMES;
 
 export const App = () => {
-  const [isSoldout, setIsSoldout] = useState({
-    10: false, 20: false, 30: false, 40: false, 50: false,
-    91: false, 92: false, 93: false, 94: false,
+  const appStartTimeRef = useRef(Date.now());
+  const [selectedTime, setSelectedTime] = useState(INITIAL_UI_STATE.selectedTime);
+  const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
+
+  const currentTestTime = USE_TEST_TIME
+    ? new Date(TEST_DATE.getTime() + (Date.now() - appStartTimeRef.current))
+    : false;
+
+  const { state, dispatch, next, prev, addItems, removeItems } = useAppFlow();
+  const {
+    calculateDifferenceOfDrinks,
+    calculateSumInMenu,
+    calculateSumPrice,
+  } = useOrderSummary(state.cart, prices);
+  const { isSoldout } = useSoldout(state.step);
+  useCookieRestore({ dispatch, setPaymentState, setSelectedTime });
+  const { handleSubmitOrderFlow } = usePaymentFlow({
+    step: state.step,
+    cart: state.cart,
+    selectedTime,
+    paymentState,
+    setPaymentState,
+    dispatch,
+    calculateSumPrice,
   });
 
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [state, dispatch] = useReducer(screenState, initialState);
-
-  // 追加: 送信中フラグ
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const goto = (s) => dispatch({ type: "GOTO", step: s });
-  const next = () => {
-    if (state.step === "menu" && calculateNumberOfDrinksInMenu() === 0) {
-      dispatch({ type: "GOTO", step: "cart" });
-    } else if (state.step === "drink") {
-      dispatch({ type: "ORGANIZE_CART" });
-      dispatch({ type: "NEXT" });
-    } else {
-      dispatch({ type: "NEXT" });
-    }
-  };
-  const prev = () => {
-    if (state.step === "cart") {
-      dispatch({ type: "CLEAR_TEMPORARY_DRINKS" });
-      dispatch({ type: "GOTO", step: "menu" });
-    } else {
-      dispatch({ type: "PREV" });
-    }
-  };
-  const addItems = (id) => dispatch({ type: "ADD_ITEM", itemId: id });
-  const removeItems = (id) => dispatch({ type: "REMOVE_ITEM", itemId: id });
-
-  const calculateNumberOfDrinksInMenu = () => {
-    return state.cart[30] + state.cart[40] + state.cart[50];
-  };
-
-  const calculateNumberOfDrinksInDrink = () => {
-    return state.cart[91] + state.cart[92] + state.cart[93] + state.cart[94];
-  };
-
-  const calculateDifferenceOfDrinks = () => {
-    return calculateNumberOfDrinksInMenu() - calculateNumberOfDrinksInDrink();
-  };
-  const calculateSumInMenu = () => {
-    return (
-      state.cart[10] +
-      state.cart[20] +
-      state.cart[30] +
-      state.cart[40] +
-      state.cart[50]
-    );
-  };
-
-  const calculateSumPrice = useCallback(() => {
-    return (
-      prices[10] * state.cart[10] +
-      prices[20] * state.cart[20] +
-      prices[30] * state.cart[30] +
-      prices[40] * state.cart[40] +
-      prices[50] * state.cart[50]
-    );
-  }, [state.cart]);
-
-  /* 売り切れ状態を管理する関数 */
-  useEffect(() => {
-    if (state.step === "menu") {
-      Api.fetchSoldoutMap().then(({ soldout }) => {
-        setIsSoldout(soldout);
-      });
-    }
-  }, [state.step]);
-
-  /* カード決済用の変数・関数 */
-  const [paymentPhase, setPaymentPhase] = useState("connecting");
-  const paymentTimerRef = useRef(null);
-  const [paymentOutcome, setPaymentOutcome] = useState({
-    ok: false,
-    orderId: null,
-    error: null,
-    receiptUrl: null,
-    displayReserved: null,
-  });
-  const [currentOrderId, setCurrentOrderId] = useState(null);
-  const [currentOrderCreatedAtIso, setCurrentOrderCreatedAtIso] =
-    useState(null);
-  const [cardAttached, setCardAttached] = useState(false);
-  const [billingFamilyName, setBillingFamilyName] = useState("");
-  const [billingGivenName, setBillingGivenName] = useState("");
-  const [billingEmail, setBillingEmail] = useState("");
-  const cardRef = useRef(null);
-
-  function clearCardContainer() {
-    const el = document.getElementById("card-container");
-    if (el) el.innerHTML = "";
-  }
-
-  const destroyCardIfAny = useCallback(async () => {
-    try {
-      if (cardRef.current && typeof cardRef.current.destroy === "function") {
-        await cardRef.current.destroy();
-      }
-    } catch (_) {
-    } finally {
-      cardRef.current = null;
-      clearCardContainer();
-      try {
-        setCardAttached(false);
-      } catch { }
-    }
-  }, [/* no external deps other than stable refs/setters */]);
-
-  /* pTimeout は未使用だったので削除しました */
-
-
-  const ensureCardMounted = useCallback(
-    async (applicationId, locationId) => {
-      function waitForContainer(timeoutMs = 3000, intervalMs = 50) {
-        const start = Date.now();
-        return new Promise((resolve) => {
-          const check = () => {
-            const el = document.getElementById("card-container");
-            if (el) return resolve(el);
-            if (Date.now() - start >= timeoutMs) return resolve(null);
-            setTimeout(check, intervalMs);
-          };
-          check();
-        });
-      }
-
-      async function tryAttach(
-        card,
-        selector = "#card-container",
-        tries = 4,
-        delayMs = 200
-      ) {
-        for (let i = 0; i < tries; i++) {
-          try {
-            await card.attach(selector);
-            console.log("DEBUG: card.attach succeeded (attempt)", i + 1);
-            return true;
-          } catch (e) {
-            console.warn("DEBUG: card.attach attempt failed", i + 1, e);
-            await new Promise((r) => setTimeout(r, delayMs));
-          }
-        }
-        return false;
-      }
-
-      if (!window.Square) throw new Error("Square SDKが読み込まれていません");
-
-      const container = await waitForContainer(8000, 50);
-      if (!container) {
-        throw new Error("#card-container が見つかりません（タイムアウト）。");
-      }
-
-      if (cardRef.current && container.childElementCount === 0) {
-        try {
-          const ok = await tryAttach(cardRef.current, "#card-container", 4, 300);
-          if (ok) {
-            setCardAttached(true);
-            return;
-          }
-          await destroyCardIfAny();
-        } catch (e) {
-          await destroyCardIfAny();
-        }
-      }
-
-      if (!cardRef.current) {
-        let payments;
-        try {
-          payments = window.Square.payments(applicationId, locationId);
-        } catch (e) {
-          throw new Error("Square.payments の初期化に失敗: " + (e?.message || e));
-        }
-
-        const card = await payments.card();
-
-        const attached = await tryAttach(card, "#card-container", 4, 300);
-        if (!attached) {
-          try {
-            await card.destroy?.();
-          } catch { }
-          throw new Error(
-            "カードUIの attach に失敗しました（複数回リトライしてもダメでした）。"
-          );
-        }
-
-        cardRef.current = card;
-        setCardAttached(true);
-        return;
-      }
-
-      if (cardRef.current && container.childElementCount > 0) {
-        setCardAttached(true);
-      }
-      return;
-    },
-    [destroyCardIfAny]
-  );
-
-  /* cookie復元: マウント時にのみ実行 */
-  useEffect(() => {
-    try {
-      const saved = getCookieJSON("cm_order_v1");
-      console.log("DEBUG: cm_order_v1 cookie loaded:", saved);
-      if (!saved) return;
-
-      const { createdAt, reservedAtIso, orderId, itemsCart, displayReserved } =
-        saved;
-      if (!reservedAtIso) {
-        deleteCookie("cm_order_v1");
-        return;
-      }
-
-      function parseReservedFromSaved(savedReserved, savedCreatedAt) {
-        if (!savedReserved) return null;
-        const byIso = new Date(savedReserved);
-        if (!isNaN(byIso.getTime())) return byIso;
-        const hhmm = String(savedReserved).trim();
-        const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
-        if (m) {
-          const base = savedCreatedAt ? new Date(savedCreatedAt) : new Date();
-          const hours = parseInt(m[1], 10);
-          const minutes = parseInt(m[2], 10);
-          if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
-            const r = new Date(base);
-            r.setHours(hours, minutes, 0, 0);
-            return r;
-          }
-        }
+  const renderPage = () => {
+    switch (state.step) {
+      case "title":
+        return <TitlePage onStart={next} />;
+      case "menu":
+        return (
+          <MenuPage
+            prices={prices}
+            itemNames={itemNames}
+            cart={state.cart}
+            addItems={addItems}
+            removeItems={removeItems}
+            isSoldout={isSoldout}
+          />
+        );
+      case "drink":
+        return (
+          <DrinkPage
+            itemNames={itemNames}
+            cart={state.cart}
+            addItems={addItems}
+            removeItems={removeItems}
+            difference={calculateDifferenceOfDrinks()}
+            isSoldout={isSoldout}
+          />
+        );
+      case "cart":
+        return <CartPage cart={state.cart} price={prices} names={itemNames} />;
+      case "time":
+        return <TimePage onTimeChange={setSelectedTime} testTime={currentTestTime} />;
+      case "payment":
+        return (
+          <PaymentPage
+            paymentState={paymentState}
+            setPaymentState={setPaymentState}
+            handleSubmitOrderFlow={handleSubmitOrderFlow}
+          />
+        );
+      case "paymentResult":
+        return (
+          <PaymentResultPage
+            paymentState={paymentState}
+            selectedTime={selectedTime}
+            setPaymentState={setPaymentState}
+            dispatch={dispatch}
+          />
+        );
+      case "numberTag":
+        return (
+          <NumberTagPage
+            cart={state.cart}
+            price={prices}
+            names={itemNames}
+            paymentState={paymentState}
+          />
+        );
+      default:
         return null;
-      }
-
-      const reserved = parseReservedFromSaved(reservedAtIso, createdAt);
-      if (!reserved) {
-        console.warn(
-          "DEBUG: cm_order_v1 has invalid reservedAtIso, deleting cookie:",
-          reservedAtIso
-        );
-        deleteCookie("cm_order_v1");
-        return;
-      }
-
-      const now = new Date();
-      const msSinceReserved = now.getTime() - reserved.getTime();
-      const oneHourMs = 60 * 60 * 1000;
-      if (msSinceReserved > oneHourMs) {
-        console.log(
-          "DEBUG: cm_order_v1 expired (more than 1 hour since reserved). Deleting cookie."
-        );
-        deleteCookie("cm_order_v1");
-        return;
-      }
-
-      console.log("DEBUG: cm_order_v1 is still valid. Restoring state from cookie.");
-      if (itemsCart && typeof itemsCart === "object") {
-        dispatch({ type: "REPLACE_CART", cart: itemsCart });
-      }
-      setSelectedTime(reserved.toISOString());
-      setPaymentOutcome({
-        ok: true,
-        orderId: orderId || null,
-        error: null,
-        receiptUrl: null,
-        displayReserved: displayReserved || formatDisplayReserved(reserved),
-      });
-      dispatch({ type: "GOTO", step: "paymentResult" });
-    } catch (e) {
-      console.warn("DEBUG: error while restoring cookie:", e);
-    }
-    // マウント時のみ
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* useEffect: payment step に入ったら order 作成と Square ロードを行う
-     calculateSumPrice, destroyCardIfAny, selectedTime, state.cart を参照するが
-     これらは意図的に _マウント/遷移ベース_ でのみ処理したいため
-     ルールを無効化している（必要な場合は useCallback 等で安定化する）。
-  */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (state.step !== "payment") return;
-
-    setPaymentPhase("connecting");
-    if (paymentTimerRef.current) clearTimeout(paymentTimerRef.current);
-    destroyCardIfAny();
-
-    paymentTimerRef.current = setTimeout(async () => {
-      try {
-        const reservedDate = parseReservedToDate(selectedTime);
-        if (!reservedDate) {
-          throw new Error("予約時刻が設定されていません。");
-        }
-
-        const createdAtIso = new Date().toISOString();
-        // reservedAtIso was unused previously; do not assign unused variables
-        const items = buildOrderItems(state.cart);
-        if (!items || items.length === 0) {
-          throw new Error("カートが空です");
-        }
-
-        const orderDateLocal = toLocalDateTimeString(new Date(createdAtIso));
-        const reservedLocal = toLocalDateTimeString(reservedDate);
-
-        if (USE_MOCK_PAYMENT) {
-          const mockOrderId = "MOCK-" + Math.floor(Math.random() * 100000);
-          setCurrentOrderId(mockOrderId);
-          setCurrentOrderCreatedAtIso(createdAtIso);
-        } else {
-          const orderResp = await Api.createOrder({
-            items,
-            orderDate: orderDateLocal,
-            reservedTime: reservedLocal,
-            amount: calculateSumPrice(),
-          });
-          const returnedOrderId = orderResp?.orderId;
-          if (!returnedOrderId)
-            throw new Error("注文作成に失敗しました (orderId 未取得)");
-          setCurrentOrderId(returnedOrderId);
-          setCurrentOrderCreatedAtIso(createdAtIso);
-        }
-
-        const cfg = await Api.getSquareConfig();
-        await loadSquareSdk(cfg?.environment || "PRODUCTION");
-        setPaymentPhase("input");
-      } catch (e) {
-        alert(e?.message || "決済モジュールの初期化に失敗しました");
-        dispatch({ type: "GOTO", step: "cart" });
-      }
-    }, 500);
-
-    return () => {
-      if (paymentTimerRef.current) clearTimeout(paymentTimerRef.current);
-      destroyCardIfAny();
-    };
-  }, [state.step, selectedTime, state.cart, calculateSumPrice, destroyCardIfAny]);
-
-  /* useEffect: paymentPhase=input のとき ensureCardMounted を呼ぶ。ensureCardMounted を
-     依存配列に追加するとループするリスクがあるため明示的に無効化しています。
-     （必要なら ensureCardMounted を useCallback 化するのが安全です）
-  */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (state.step !== "payment") return;
-    if (paymentPhase !== "input") return;
-
-    const attachTimer = setTimeout(() => {
-      (async () => {
-        try {
-          const cfg = await Api.getSquareConfig();
-          await ensureCardMounted(cfg.applicationId, cfg.locationId);
-        } catch (e) {
-          alert(e?.message || "#card-container の初期化に失敗しました");
-          dispatch({ type: "GOTO", step: "cart" });
-        }
-      })();
-    }, 100);
-
-    return () => {
-      clearTimeout(attachTimer);
-    };
-  }, [state.step, paymentPhase, ensureCardMounted]);
-
-  const canUseCookies = async () => {
-    try {
-      const key = "__cm_cookie_test";
-      setCookieStr(key, "1", 60);
-      const v = getCookieStr(key);
-      deleteCookie(key);
-      return v === "1";
-    } catch {
-      return false;
     }
   };
 
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
-  }
-
-  function buildVerificationDetails(amountYen, billingContact) {
-    if (
-      !billingContact ||
-      !String(billingContact.familyName || "").trim() ||
-      !String(billingContact.givenName || "").trim() ||
-      !String(billingContact.email || "").trim() ||
-      !isValidEmail(billingContact.email)
-    ) {
-      throw new Error(
-        "請求先情報が不正です。苗字・名前・有効なメールアドレスを入力してください。"
-      );
-    }
-
-    return {
-      amount: String(amountYen),
-      currencyCode: "JPY",
-      intent: "CHARGE",
-      customerInitiated: true,
-      sellerKeyedIn: false,
-      billingContact: {
-        familyName: billingContact.familyName.trim(),
-        givenName: billingContact.givenName.trim(),
-        email: billingContact.email.trim(),
-      },
-    };
-  }
-
-  const handleSubmitOrderFlow = async () => {
-    if (!(await canUseCookies()))
-      throw new Error("このブラウザではCookieが使えません。");
-
-    const items = buildOrderItems(state.cart);
-    if (items.length === 0) throw new Error("カートが空です");
-
-    const reservedDate = parseReservedToDate(selectedTime);
-    if (!reservedDate) throw new Error("予約時刻が不正です");
-
-    const reservedAtIso = reservedDate.toISOString();
-    const amount = calculateSumPrice();
-
-    let orderId = currentOrderId;
-    let createdAtIso = currentOrderCreatedAtIso || new Date().toISOString();
-
-    if (!orderId) {
-      if (USE_MOCK_PAYMENT) {
-        orderId = "MOCK-" + Math.floor(Math.random() * 100000);
-      } else {
-        const orderDateLocal = toLocalDateTimeString(new Date(createdAtIso));
-        const reservedLocal = toLocalDateTimeString(reservedDate);
-        const orderResp = await Api.createOrder({
-          items,
-          orderDate: orderDateLocal,
-          reservedTime: reservedLocal,
-          amount,
-        });
-        orderId = orderResp?.orderId;
-        if (!orderId) throw new Error("orderIdの発行に失敗しました");
-      }
-      setCurrentOrderId(orderId);
-      setCurrentOrderCreatedAtIso(createdAtIso);
-    }
-
-    try {
-      if (!cardRef.current) {
-        const cfg2 = await Api.getSquareConfig();
-        await ensureCardMounted(cfg2.applicationId, cfg2.locationId);
-        if (!cardRef.current) throw new Error("カードUIの初期化に失敗しました");
-      }
-
-      if (
-        !billingFamilyName.trim() ||
-        !billingGivenName.trim() ||
-        !billingEmail.trim()
-      ) {
-        throw new Error("氏名とメールアドレスを入力してください。");
-      }
-      if (!isValidEmail(billingEmail))
-        throw new Error("有効なメールアドレスを入力してください。");
-
-      const verificationDetails = buildVerificationDetails(amount, {
-        familyName: billingFamilyName,
-        givenName: billingGivenName,
-        email: billingEmail,
-      });
-
-      const result = await cardRef.current.tokenize(verificationDetails);
-
-      if (result.status !== "OK") {
-        const msg =
-          result.errors?.[0]?.message || "カードのトークン化に失敗しました";
-        throw new Error(msg);
-      }
-      const sourceId = result.token;
-
-      let payment;
-      if (USE_MOCK_PAYMENT) {
-        await new Promise((r) => setTimeout(r, 300));
-        payment = { status: "COMPLETED", receiptUrl: "" };
-      } else {
-        payment = await Api.chargeOrder({
-          orderId,
-          sourceId,
-        });
-      }
-
-      //hasKeyError（重複決済）がtrueなら何も（画面遷移含め）せず終了
-      if (payment?.hasKeyError) {
-        return;
-      }
-
-      if (payment?.status === "COMPLETED") {
-        const displayReserved = formatDisplayReserved(reservedDate);
-        setCookieJSON(
-          "cm_order_v1",
-          {
-            createdAt: createdAtIso,
-            reservedAtIso,
-            orderId,
-            itemsCart: state.cart,
-            displayReserved,
-          },
-          7 * 24 * 60 * 60
-        );
-
-        console.log("DEBUG: cm_order_v1 saved:", getCookieJSON("cm_order_v1"));
-
-        setPaymentOutcome({
-          ok: true,
-          orderId,
-          error: null,
-          receiptUrl: payment?.receiptUrl || null,
-          displayReserved,
-        });
-      } else {
-        setPaymentOutcome({
-          ok: false,
-          orderId,
-          error: payment?.error || "決済が承認されませんでした",
-          receiptUrl: null,
-          displayReserved: formatDisplayReserved(reservedDate),
-        });
-      }
-    } catch (e) {
-      setPaymentOutcome({
-        ok: false,
-        orderId: orderId || null,
-        error: e?.message || "決済処理中にエラーが発生しました",
-        receiptUrl: null,
-        displayReserved: formatDisplayReserved(reservedDate),
-      });
-    }
-    dispatch({ type: "GOTO", step: "paymentResult" });
-  };
-  /* ここから JSX  */
-  // window.isSoldout = isSoldout;
   return (
     <>
-      {/* スピナー用の keyframes をここで一度だけ定義 */}
-      <style>{`
-        @keyframes cm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      <style>{`\n        @keyframes cm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n      `}</style>
 
       <header>
         <Header />
         <div style={{ minHeight: "10px" }}></div>
       </header>
 
-      {state.step === "title" && <Title onStart={next} />}
+      {renderPage()}
 
-      {state.step === "menu" && (
-        <>
-          <div className="center-alignment">
-            <div className="list-row">
-              <Menu
-                borderColor={"2px solid #ffbf7f"}
-                backgroundColor={"#ffd3a8"}
-                itemPrice={`¥${prices[40]}`}
-                itemName={itemNames[40]}
-                count={state.cart[40]}
-                id={40}
-                add={addItems}
-                remove={removeItems}
-                image={img_40}
-                isSoldout={isSoldout[40]}
-              />
-              <Menu
-                borderColor={"2px solid #ffbf7f"}
-                backgroundColor={"#ffd3a8"}
-                itemPrice={`¥${prices[50]}`}
-                itemName={itemNames[50]}
-                count={state.cart[50]}
-                id={50}
-                add={addItems}
-                remove={removeItems}
-                image={img_50}
-                isSoldout={isSoldout[50]}
-              />
-            </div>
-            <div className="list-row">
-              <Menu
-                borderColor={"2px solid #ffbf7f"}
-                backgroundColor={"#ffd3a8"}
-                itemPrice={`¥${prices[10]}`}
-                itemName={itemNames[10]}
-                count={state.cart[10]}
-                id={10}
-                add={addItems}
-                remove={removeItems}
-                image={img_10}
-                isSoldout={isSoldout[10]}
-              />
-              <Menu
-                borderColor={"2px solid #ffbf7f"}
-                backgroundColor={"#ffd3a8"}
-                itemPrice={`¥${prices[20]}`}
-                itemName={itemNames[20]}
-                count={state.cart[20]}
-                id={20}
-                add={addItems}
-                remove={removeItems}
-                image={img_20}
-                isSoldout={isSoldout[20]}
-              />
-            </div>
-            <div className="list-row">
-              <Menu
-                borderColor={"2px solid #ffbf7f"}
-                backgroundColor={"#ffd3a8"}
-                itemPrice={`¥${prices[30]}`}
-                itemName={itemNames[30]}
-                count={state.cart[30]}
-                id={30}
-                add={addItems}
-                remove={removeItems}
-                image={img_30}
-                isSoldout={isSoldout[30]}
-              />
-            </div>
-          </div>
-          <div style={{ minHeight: "60px" }}></div>
-        </>
-      )}
-
-      {state.step === "drink" && (
-        <>
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "22px",
-              margin: "10px auto",
-            }}
-          >
-            飲み物を選択してください
-          </p>
-          {calculateDifferenceOfDrinks() > 0 && (
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "30px",
-                fontWeight: "bold",
-                margin: "10px auto",
-                backgroundColor: "#9eceff",
-              }}
-            >
-              {`あと ${calculateDifferenceOfDrinks()} 個`}
-            </p>
-          )}
-          {calculateDifferenceOfDrinks() === 0 && (
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "30px",
-                fontWeight: "bold",
-                margin: "10px auto",
-                backgroundColor: "#9eceff",
-              }}
-            >
-              OK！
-            </p>
-          )}
-          {calculateDifferenceOfDrinks() < 0 && (
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "30px",
-                fontWeight: "bold",
-                margin: "10px auto",
-                backgroundColor: "#9eceff",
-              }}
-            >
-              数を減らしてください
-            </p>
-          )}
-          <div className="center-alignment">
-            <div className="list-row">
-              <Menu
-                borderColor={"2px solid #7fbfff"}
-                backgroundColor={"#a8d3ff"}
-                itemName={itemNames[91]}
-                count={state.cart[91]}
-                id={91}
-                add={addItems}
-                remove={removeItems}
-                difference={calculateDifferenceOfDrinks()}
-                isDrinkScreen={state.step === "drink"}
-                image={img_91}
-                isSoldout={isSoldout[91]}
-              />
-              <Menu
-                borderColor={"2px solid #7fbfff"}
-                backgroundColor={"#a8d3ff"}
-                itemName={itemNames[92]}
-                count={state.cart[92]}
-                id={92}
-                add={addItems}
-                remove={removeItems}
-                difference={calculateDifferenceOfDrinks()}
-                isDrinkScreen={state.step === "drink"}
-                image={img_92}
-                isSoldout={isSoldout[92]}
-              />
-            </div>
-            <div className="list-row">
-              <Menu
-                borderColor={"2px solid #7fbfff"}
-                backgroundColor={"#a8d3ff"}
-                itemName={itemNames[93]}
-                count={state.cart[93]}
-                id={93}
-                add={addItems}
-                remove={removeItems}
-                difference={calculateDifferenceOfDrinks()}
-                isDrinkScreen={state.step === "drink"}
-                image={img_93}
-                isSoldout={isSoldout[93]}
-              />
-              <Menu
-                borderColor={"2px solid #7fbfff"}
-                backgroundColor={"#a8d3ff"}
-                itemName={itemNames[94]}
-                count={state.cart[94]}
-                id={94}
-                add={addItems}
-                remove={removeItems}
-                difference={calculateDifferenceOfDrinks()}
-                isDrinkScreen={state.step === "drink"}
-                image={img_94}
-                isSoldout={isSoldout[94]}
-              />
-            </div>
-          </div>
-          <div style={{ minHeight: "60px" }}></div>
-        </>
-      )}
-      {state.step === "cart" && (
-        <>
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "22px",
-              fontWeight: "bold",
-              margin: "16px auto",
-            }}
-          >
-            ご注文内容の確認
-          </p>
-          <div>
-            <Order cart={state.cart} price={prices} names={itemNames} />
-            <div style={{ minHeight: "60px" }}></div>
-          </div>
-        </>
-      )}
-      {state.step === "time" && (
-        <>
-          <div className="reservation-page-wrapper">
-            {/* WARNING:本番はtestTimeはfalse、テスト時はgetCurrentTestDate()にする */}
-            <TimeSelect onTimeChange={setSelectedTime} testTime={false} />
-          </div>
-        </>
-      )}
-      {state.step === "payment" && (
-        <>
-          {paymentPhase === "connecting" && (
-            <p style={{ marginLeft: "10px" }}>外部決済サービスに接続中...</p>
-          )}
-          {paymentPhase === "input" && (
-            <div style={{ padding: "12px 10px" }}>
-              <p style={{ margin: "6px 10px" }}>カード情報の入力</p>
-
-              {/* billing fields */}
-              <div style={{ margin: "6px 10px", marginBottom: 12 }}>
-                <input
-                  placeholder="苗字 (例: 山田)"
-                  value={billingFamilyName}
-                  onChange={(e) => setBillingFamilyName(e.target.value)}
-                  style={{ width: "32%", marginRight: 6 }}
-                />
-                <input
-                  placeholder="名前 (例: 太郎)"
-                  value={billingGivenName}
-                  onChange={(e) => setBillingGivenName(e.target.value)}
-                  style={{ width: "32%", marginRight: 6 }}
-                />
-                <input
-                  placeholder="メールアドレス (例: taro@example.com)"
-                  value={billingEmail}
-                  onChange={(e) => setBillingEmail(e.target.value)}
-                  style={{ width: "68%" }}
-                />
-                <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
-                  ※3DS（本人認証）用に氏名とメールが必要になる場合があります
-                </div>
-              </div>
-
-              <div id="card-container" style={{ margin: "12px 10px" }} />
-
-              {/* 支払うボタン（送信中は無効化 & スタイル変更） */}
-              {(() => {
-                const baseBtnStyle = {
-                  marginLeft: 10,
-                  width: 160,
-                  height: 32,
-                  fontSize: 14,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                  backgroundColor: "#fff",
-                  color: "#222",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                };
-                const processingBtnStyle = {
-                  ...baseBtnStyle,
-                  backgroundColor: "#f4f6f8",
-                  color: "#888",
-                  border: "1px solid #ddd",
-                  cursor: "not-allowed",
-                  opacity: 0.95,
-                };
-                const disabledReason =
-                  !cardAttached ||
-                  !billingFamilyName.trim() ||
-                  !billingGivenName.trim() ||
-                  !billingEmail.trim();
-
-                return (
-                  <button
-                    style={isSubmitting ? processingBtnStyle : baseBtnStyle}
-                    disabled={isSubmitting || disabledReason}
-                    aria-disabled={isSubmitting || disabledReason}
-                    onClick={async () => {
-                      if (isSubmitting) return; // 二重ガード
-                      setIsSubmitting(true);
-                      try {
-                        await handleSubmitOrderFlow();
-                      } catch (e) {
-                        // handleSubmitOrderFlow 内でもエラーハンドリングしているが、念のため
-                        alert(e?.message || "決済でエラーが発生しました");
-                      } finally {
-                        // 成功時は画面遷移でアンマウントされるため無害。
-                        setIsSubmitting(false);
-                      }
-                    }}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span
-                          style={{
-                            width: 14,
-                            height: 14,
-                            border: "2px solid #ccc",
-                            borderTopColor: "#333",
-                            borderRadius: "50%",
-                            display: "inline-block",
-                            animation: "cm-spin 1s linear infinite",
-                          }}
-                        />
-                        <span>処理中…</span>
-                      </>
-                    ) : (
-                      "支払う"
-                    )}
-                  </button>
-                );
-              })()}
-
-              <p style={{ color: "#808080" }}>この決済は外部決済サービス「Square」によって行われます</p>
-              <p style={{ color: "#808080" }}>決済には数秒〜数十秒ほど時間がかかる場合があります。</p>
-            </div>
-          )}
-        </>
-      )
-      }
-      {
-        state.step === "paymentResult" && (
-          <>
-            {paymentOutcome.ok ? (
-              <div style={{ padding: "12px" }}>
-                <p
-                  style={{
-                    textAlign: "center",
-                    fontSize: 22,
-                    fontWeight: "bold",
-                    margin: "16px auto",
-                  }}
-                >
-                  決済が完了しました
-                </p>
-                <p style={{ textAlign: "center", fontSize: 18, margin: "6px" }}>
-                  注文番号：<b>{paymentOutcome.orderId}</b>
-                </p>
-                {paymentOutcome.receiptUrl && (
-                  <p style={{ textAlign: "center", margin: "6px" }}>
-                    <a
-                      href={paymentOutcome.receiptUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      レシートを開く
-                    </a>
-                  </p>
-                )}
-                <div style={{ textAlign: "center", marginTop: 16 }}>
-                  <button
-                    style={{ width: 160, height: 44, fontSize: 18 }}
-                    onClick={() => dispatch({ type: "GOTO", step: "numberTag" })}
-                  >
-                    番号札を表示
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ padding: "12px" }}>
-                <p
-                  style={{
-                    textAlign: "center",
-                    fontSize: 22,
-                    fontWeight: "bold",
-                    margin: "16px auto",
-                    color: "red",
-                  }}
-                >
-                  決済に失敗しました
-                </p>
-                {paymentOutcome.orderId && (
-                  <p
-                    style={{ textAlign: "center", fontSize: 24, margin: "18px" }}
-                  >
-                    予約時刻：
-                    <b>
-                      {paymentOutcome.displayReserved ??
-                        formatReservedTimeHHmm(parseReservedToDate(selectedTime))}
-                    </b>
-                  </p>
-                )}
-                <p style={{ textAlign: "center", fontSize: 16, margin: "6px" }}>
-                  {paymentOutcome.error || "不明なエラー"}
-                </p>
-                <div style={{ textAlign: "center", marginTop: 16 }}>
-                  <button
-                    style={{
-                      width: 160,
-                      height: 44,
-                      fontSize: 18,
-                      marginRight: 10,
-                    }}
-                    onClick={() => {
-                      setPaymentOutcome({
-                        ok: false,
-                        orderId: null,
-                        error: null,
-                        receiptUrl: null,
-                        displayReserved: null,
-                      });
-                      dispatch({ type: "GOTO", step: "cart" });
-                    }}
-                  >
-                    カートに戻る
-                  </button>
-                  <button
-                    style={{ width: 160, height: 44, fontSize: 18 }}
-                    onClick={() => {
-                      setPaymentOutcome({
-                        ok: false,
-                        orderId: null,
-                        error: null,
-                        receiptUrl: null,
-                        displayReserved: null,
-                      });
-                      dispatch({ type: "GOTO", step: "payment" });
-                    }}
-                  >
-                    再試行
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )
-      }
-      {
-        state.step === "numberTag" && (
-          <>
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "22px",
-                fontWeight: "bold",
-                margin: "16px auto",
-              }}
-            >
-              ご注文ありがとうございます！
-            </p>
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "20px",
-                margin: "16px 0px 2px 0px",
-              }}
-            >
-              注文番号
-            </p>
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "60px",
-                fontWeight: "bold",
-                margin: "2px",
-              }}
-            >
-              {paymentOutcome.orderId ?? "NNNNN"}
-            </p>
-            {paymentOutcome.displayReserved && (
-              <p style={{ textAlign: "center", fontSize: 24, margin: "16px 0" }}>
-                予約日時：{paymentOutcome.displayReserved}
-              </p>
-            )}
-            <Order cart={state.cart} price={prices} names={itemNames} />
-          </>
-        )
-      }
-      {
-        state.step !== "payment" &&
+      {state.step !== "payment" &&
         state.step !== "paymentResult" &&
         state.step !== "complete" &&
         state.step !== "title" &&
@@ -1298,17 +132,13 @@ export const App = () => {
               sumPrice={calculateSumPrice()}
               prev={prev}
               next={next}
-              goto={goto}
               currentStep={state.step}
-              //WARNING:本番はtestTimeはfalse、テスト時はgetCurrentTestDate()にする
-              testTime={false}
+              testTime={currentTestTime}
               numOfChosenMenu={calculateSumInMenu()}
-              numOfOrderedDrinks={calculateNumberOfDrinksInMenu()}
               difference={calculateDifferenceOfDrinks()}
             />
           </footer>
-        )
-      }
+        )}
     </>
   );
 };
