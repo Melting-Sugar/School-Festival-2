@@ -8,15 +8,7 @@ import { TimePage } from "./pages/TimePage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { PaymentResultPage } from "./pages/PaymentResultPage";
 import { NumberTagPage } from "./pages/NumberTagPage";
-
-const shouldShowFooter = (step) => {
-  return (
-    step !== "payment" &&
-    step !== "paymentResult" &&
-    step !== "title" &&
-    step !== "numberTag"
-  );
-};
+import { shouldShowFooter } from "./constants/stepRules";
 
 const renderPage = ({
   step,

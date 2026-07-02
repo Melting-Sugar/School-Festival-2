@@ -203,6 +203,7 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
           setPaymentState,
           orderId,
           createdAtIso,
+          useMockPayment: USE_MOCK_PAYMENT,
         });
       } catch (e) {
         handlePaymentInitializationFailure(e, "決済モジュールの初期化に失敗しました");
@@ -228,6 +229,7 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
             setPaymentState,
             orderId: paymentState.orderId,
             createdAtIso: paymentState.createdAtIso || new Date().toISOString(),
+            useMockPayment: USE_MOCK_PAYMENT,
           });
           await ensurePaymentCardMounted({
             cardRef,

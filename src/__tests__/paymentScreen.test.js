@@ -13,10 +13,31 @@ describe("paymentScreen", () => {
       setPaymentState,
       orderId: "ORDER-1",
       createdAtIso: "2026-07-02T12:00:00.000Z",
+      useMockPayment: false,
     });
 
-    expect(getSquareConfig).toHaveBeenCalled();
+    expect(getSquareConfig).toHaveBeenCalledWith({ useMockPayment: false });
     expect(loadSquareSdk).toHaveBeenCalledWith("SANDBOX");
     expect(setPaymentState).toHaveBeenCalled();
+  });
+
+  test("fails closed when square config cannot be retrieved in real mode", async () => {
+    const getSquareConfig = jest.fn().mockRejectedValue(new Error("Square設定の取得に失敗しました"));
+    const loadSquareSdk = jest.fn().mockResolvedValue(undefined);
+    const setPaymentState = jest.fn();
+
+    await expect(
+      initializePaymentScreen({
+        getSquareConfig,
+        loadSquareSdk,
+        setPaymentState,
+        orderId: "ORDER-1",
+        createdAtIso: "2026-07-02T12:00:00.000Z",
+        useMockPayment: false,
+      })
+    ).rejects.toThrow("Square設定の取得に失敗しました");
+
+    expect(loadSquareSdk).not.toHaveBeenCalled();
+    expect(setPaymentState).not.toHaveBeenCalled();
   });
 });

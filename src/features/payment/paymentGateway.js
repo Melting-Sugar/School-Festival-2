@@ -106,7 +106,7 @@ export async function submitPaymentTransaction({
 
   if (useMockPayment) {
     if (!cardRef.current) {
-      const cfg = await getSquareConfig();
+      const cfg = await getSquareConfig({ useMockPayment });
       await loadSquareSdk(cfg?.environment || "PRODUCTION");
       await ensurePaymentCardMounted(cfg);
       if (!cardRef.current) throw new Error("カードUIの初期化に失敗しました");
@@ -124,7 +124,7 @@ export async function submitPaymentTransaction({
   }
 
   if (!cardRef.current) {
-    const cfg = await getSquareConfig();
+    const cfg = await getSquareConfig({ useMockPayment });
     await loadSquareSdk(cfg?.environment || "PRODUCTION");
     await ensurePaymentCardMounted(cfg);
     if (!cardRef.current) throw new Error("カードUIの初期化に失敗しました");

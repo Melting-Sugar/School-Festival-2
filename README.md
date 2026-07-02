@@ -53,6 +53,9 @@ npm test
 
 開発中にテストモードを使う場合は、ここで `true` を設定します。
 
+`REACT_APP_USE_MOCK_PAYMENT=true` の場合は、Square 設定の取得に失敗してもフロント側の
+`SQUARE_FALLBACK_CONFIG` を使って継続します。これは開発・検証用の挙動です。
+
 ### `.env.production`
 
 本番ビルド用です。公開環境で使う設定を書きます。
@@ -64,6 +67,10 @@ npm test
 - `REACT_APP_USE_TEST_TIME=false`
 
 本番ではテストモードを無効にしてください。
+
+`REACT_APP_USE_MOCK_PAYMENT=false` の場合は、`/api/square/config` で Square 設定を取得
+できないときに処理を継続しません。本番では fallback に逃がさず、設定取得失敗を明示
+して止める設計です。
 
 ### 既定値
 
@@ -96,6 +103,8 @@ npm test
 - 決済や注文の正本はバックエンドです。フロント側の Cookie は補助的な復元用です。
 - 本番では `REACT_APP_USE_MOCK_PAYMENT` と `REACT_APP_USE_TEST_TIME` を必ず `false` にしてください。
 - Square の公開設定値は環境変数で管理してください。
+- Square 設定の取得は、mock モードではフロント fallback を許可し、real モードでは
+	バックエンド取得失敗時に停止するようにしています。
 
 ## 補足
 

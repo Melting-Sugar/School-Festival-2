@@ -5,8 +5,9 @@ export async function initializePaymentScreen({
   setPaymentState,
   orderId,
   createdAtIso,
+  useMockPayment = false,
 }) {
-  const cfg = await getSquareConfig();
+  const cfg = await getSquareConfig({ useMockPayment });
   await loadSquareSdk(cfg?.environment || "PRODUCTION");
   setPaymentState((prev) => ({ ...prev, orderId, createdAtIso, phase: "input" }));
   return cfg;

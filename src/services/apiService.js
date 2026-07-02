@@ -14,7 +14,7 @@ function isValidAppId(id) {
 
 export const Api = {
   // Square の applicationId / locationId / environment を取得する。
-  async getSquareConfig() {
+  async getSquareConfig({ useMockPayment = false } = {}) {
     try {
       const res = await fetch(API_ENDPOINTS.SQUARE_CONFIG, {
         headers: { Accept: "application/json" },
@@ -38,27 +38,46 @@ export const Api = {
                 "getSquareConfig: invalid applicationId in /api/square/config JSON:",
                 appId
               );
+              if (!useMockPayment) {
+                throw new Error("Square設定の取得に失敗しました");
+              }
             }
           } catch (e) {
             console.warn(
               "getSquareConfig: failed to parse JSON from /api/square/config:",
               e
             );
+            if (!useMockPayment) {
+              throw new Error("Square設定の取得に失敗しました");
+            }
           }
         } else {
           console.warn(
             "getSquareConfig: /api/square/config returned non-JSON content-type:",
             ctype
           );
+          if (!useMockPayment) {
+            throw new Error("Square設定の取得に失敗しました");
+          }
         }
       } else {
         console.warn(
           "getSquareConfig: /api/square/config returned not ok:",
           res.status
         );
+        if (!useMockPayment) {
+          throw new Error("Square設定の取得に失敗しました");
+        }
       }
     } catch (e) {
       console.warn("getSquareConfig: fetch error /api/square/config:", e);
+      if (!useMockPayment) {
+        throw e instanceof Error ? e : new Error("Square設定の取得に失敗しました");
+      }
+    }
+
+    if (!useMockPayment) {
+      throw new Error("Square設定の取得に失敗しました");
     }
 
     // 2) 旧実装互換: テキストで ApplicationId を返す endpoint を試す。
