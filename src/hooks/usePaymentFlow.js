@@ -9,7 +9,7 @@ import { deleteCookie, getCookieJSON, getCookieStr, setCookieJSON, setCookieStr 
 import { formatDisplayReserved } from "../utils/dateFormat";
 import { buildVerificationDetails } from "../features/payment/paymentValidation";
 import { buildOrderSnapshot } from "../features/order/orderSnapshot";
-import { createPaymentOrder } from "../features/payment/paymentSession";
+import { parseReservedToDate } from "../utils/orderUtils";
 import {
   ensurePaymentCardMounted,
   submitPaymentTransaction,
@@ -87,19 +87,18 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
       throw new Error("このブラウザではCookieが使えません。");
     }
 
-    const orderSession = await createPaymentOrder({
-      cart,
-      selectedTime,
-      calculateSumPrice,
-      useMockPayment: USE_MOCK_PAYMENT,
-      createOrder: Api.createOrder,
-      createdAtIso: paymentState.createdAtIso,
-    });
-
-    const { orderId, createdAtIso, reservedDate, reservedAtIso, amount } = orderSession;
-    if (!paymentState.orderId) {
-      setPaymentState((prev) => ({ ...prev, orderId, createdAtIso }));
+    const reservedDate = parseReservedToDate(selectedTime);
+    if (!reservedDate) {
+      throw new Error("予約時刻が不正です");
     }
+
+    const orderId = paymentState.orderId;
+    if (!orderId) {
+      throw new Error("注文IDがありません");
+    }
+    const createdAtIso = paymentState.createdAtIso || new Date().toISOString();
+    const reservedAtIso = reservedDate.toISOString();
+    const amount = calculateSumPrice();
 
     try {
       const payment = await submitPaymentTransaction({
@@ -175,7 +174,6 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
     buildVerificationDetails,
     dispatch,
     destroyCardIfAny,
-    setPaymentState,
     cardRef,
   ]);
 
