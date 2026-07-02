@@ -9,6 +9,7 @@ import { deleteCookie, getCookieJSON, getCookieStr, setCookieJSON, setCookieStr 
 import { formatDisplayReserved } from "../utils/dateFormat";
 import { buildVerificationDetails } from "../features/payment/paymentValidation";
 import { buildOrderSnapshot } from "../features/order/orderSnapshot";
+import { createPaymentOrder } from "../features/payment/paymentSession";
 import { parseReservedToDate } from "../utils/orderUtils";
 import {
   ensurePaymentCardMounted,
