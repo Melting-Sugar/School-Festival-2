@@ -53,6 +53,13 @@ npm test
 
 開発中にテストモードを使う場合は、ここで `true` を設定します。
 
+たとえば、Square のモック決済を有効にするには `.env.local` に
+`REACT_APP_USE_MOCK_PAYMENT=true` を設定します。
+
+同様に、テスト時刻を有効にするには `.env.local` に
+`REACT_APP_USE_TEST_TIME=true` を設定します。これは予約時刻の表示や判定を
+テスト用の時刻で動かすための開発・検証用設定です。
+
 `REACT_APP_USE_MOCK_PAYMENT=true` の場合は、Square 設定の取得に失敗してもフロント側の
 `SQUARE_FALLBACK_CONFIG` を使って継続します。これは開発・検証用の挙動です。
 
