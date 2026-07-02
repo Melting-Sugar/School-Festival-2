@@ -6,6 +6,7 @@ import { App } from "./App";
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
+// React アプリを DOM にマウントするエントリーポイント。
 root.render(
   <StrictMode>
     <App />

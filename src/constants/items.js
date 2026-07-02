@@ -1,3 +1,4 @@
+// 商品 ID、価格、商品名、カート初期値、注文用 ID 変換をまとめるファイル。
 export const PRODUCT_CATEGORIES = {
   // 商品
   PORK_SINGLE: 10,

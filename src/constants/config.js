@@ -1,4 +1,5 @@
 // API エンドポイント
+// API 接続先、タイムアウト、Square 設定、予約関連の共通定数をまとめるファイル。
 export const API_ENDPOINTS = {
   SQUARE_CONFIG: "/api/square/config",
   ITEM_BY_ID: (itemId) => `/api/items/get/byitemId/${itemId}`,
@@ -65,5 +66,19 @@ export const TEST_DATE = new Date(2025, 8, 22, 12, 0, 0);
 export const TEMP_COOKIE_TEST_KEY = "__cm_cookie_test";
 
 // テスト実行スイッチ
-export const USE_MOCK_PAYMENT = true;
-export const USE_TEST_TIME = true;
+const parseBooleanEnv = (value, defaultValue = false) => {
+  if (value == null || value === "") {
+    return defaultValue;
+  }
+
+  return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
+};
+
+export const USE_MOCK_PAYMENT = parseBooleanEnv(
+  process.env.REACT_APP_USE_MOCK_PAYMENT,
+  false
+);
+export const USE_TEST_TIME = parseBooleanEnv(
+  process.env.REACT_APP_USE_TEST_TIME,
+  false
+);

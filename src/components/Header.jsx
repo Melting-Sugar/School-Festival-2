@@ -1,3 +1,4 @@
+// 画面上部に表示するヘッダーを描画するコンポーネント。
 import logoImg from "../image/logo.jpg";
 
 const headerStyle = {

@@ -1,5 +1,6 @@
 //初期状態の定義
 
+// アプリ起動時に使う画面状態と決済状態の初期値を定義するファイル。
 import { STEPS, STEPS_ARRAY } from "./steps";
 import { CART_INITIAL } from "./items";
 

@@ -1,8 +1,10 @@
 // フロント -> バックエンドの API 呼び出しラッパー。
+// フロントからバックエンドへ送る API 通信だけをまとめるラッパー。
 // Square 設定、売り切れ取得、注文作成、決済、注文取得をこの 1 ファイルに集約する。
 
 import { API_ENDPOINTS, SOLDOUT_FETCH_IDS } from "../constants/config";
 import { SQUARE_FALLBACK_CONFIG } from "../constants/config";
+import { applySoldoutRules } from "../features/soldout/soldoutPolicy";
 
 function isValidAppId(id) {
   if (!id || typeof id !== "string") return false;
@@ -12,7 +14,7 @@ function isValidAppId(id) {
 
 export const Api = {
   // Square の applicationId / locationId / environment を取得する。
-  async getSquareConfig() {
+  async getSquareConfig({ useMockPayment = false } = {}) {
     try {
       const res = await fetch(API_ENDPOINTS.SQUARE_CONFIG, {
         headers: { Accept: "application/json" },
@@ -36,27 +38,46 @@ export const Api = {
                 "getSquareConfig: invalid applicationId in /api/square/config JSON:",
                 appId
               );
+              if (!useMockPayment) {
+                throw new Error("Square設定の取得に失敗しました");
+              }
             }
           } catch (e) {
             console.warn(
               "getSquareConfig: failed to parse JSON from /api/square/config:",
               e
             );
+            if (!useMockPayment) {
+              throw new Error("Square設定の取得に失敗しました");
+            }
           }
         } else {
           console.warn(
             "getSquareConfig: /api/square/config returned non-JSON content-type:",
             ctype
           );
+          if (!useMockPayment) {
+            throw new Error("Square設定の取得に失敗しました");
+          }
         }
       } else {
         console.warn(
           "getSquareConfig: /api/square/config returned not ok:",
           res.status
         );
+        if (!useMockPayment) {
+          throw new Error("Square設定の取得に失敗しました");
+        }
       }
     } catch (e) {
       console.warn("getSquareConfig: fetch error /api/square/config:", e);
+      if (!useMockPayment) {
+        throw e instanceof Error ? e : new Error("Square設定の取得に失敗しました");
+      }
+    }
+
+    if (!useMockPayment) {
+      throw new Error("Square設定の取得に失敗しました");
     }
 
     // 2) 旧実装互換: テキストで ApplicationId を返す endpoint を試す。
@@ -116,18 +137,7 @@ export const Api = {
       }
     }
 
-    soldout[40] = soldout[10];
-    soldout[50] = soldout[20];
-
-    if (soldout[91] && soldout[92] && soldout[93] && soldout[94]) {
-      soldout[30] = true;
-      soldout[40] = true;
-      soldout[50] = true;
-    } else {
-      soldout[30] = false;
-    }
-
-    return { soldout };
+    return applySoldoutRules(soldout);
   },
 
   // 注文を作成する。

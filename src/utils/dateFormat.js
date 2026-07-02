@@ -1,3 +1,4 @@
+// 日時を表示用の文字列へ変換するユーティリティ。
 export function toLocalDateTimeString(d) {
   const D = new Date(d);
   const p = (n) => String(n).padStart(2, "0");

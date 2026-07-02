@@ -1,3 +1,4 @@
+// Cookie の読み書きと削除を安全に扱う汎用ユーティリティ。
 const encode = (v) => encodeURIComponent(v);
 const decode = (v) => decodeURIComponent(v);
 

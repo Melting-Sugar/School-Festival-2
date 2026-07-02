@@ -1,14 +1,40 @@
-import { useCallback, useReducer } from "react";
+// 画面遷移とカート状態を管理し、各画面操作に必要な dispatch を返すフック。
+import { useCallback, useReducer, useState } from "react";
 
-import { INITIAL_APP_STATE } from "../constants/initialState";
+import { INITIAL_APP_STATE, INITIAL_UI_STATE } from "../constants/initialState";
 import {
   PRODUCT_CATEGORIES,
   DRINK_TYPE_IDS,
-  DRINK_SUBITEM_IDS,
 } from "../constants/items";
 import { STEPS_ARRAY } from "../constants/steps";
+import { organizeCart } from "../features/order/cartOrganizer";
+import { canProceedFromMenu } from "../features/order/orderEligibility";
 
 const steps = STEPS_ARRAY;
+
+const applyItemQuantityDelta = (state, itemId, delta) => {
+  const currentCount = state.cart[itemId] || 0;
+  const nextCount = currentCount + delta;
+
+  if (nextCount <= 0) {
+    if (currentCount <= 0) return state;
+    return {
+      ...state,
+      cart: {
+        ...state.cart,
+        [itemId]: 0,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    cart: {
+      ...state.cart,
+      [itemId]: nextCount,
+    },
+  };
+};
 
 export const screenState = (state, action) => {
   switch (action.type) {
@@ -33,55 +59,9 @@ export const screenState = (state, action) => {
       }
       return state;
     }
-    case "ADD_ITEM": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      return {
-        ...state,
-        cart: {
-          ...state.cart,
-          [itemId]: currentCount + 1,
-        },
-      };
-    }
-    case "REMOVE_ITEM": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      if (currentCount > 0) {
-        return {
-          ...state,
-          cart: {
-            ...state.cart,
-            [itemId]: currentCount - 1,
-          },
-        };
-      }
-      return state;
-    }
-    case "ADD_DRINK": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      return {
-        ...state,
-        cart: {
-          ...state.cart,
-          [itemId]: currentCount + 1,
-        },
-      };
-    }
-    case "REMOVE_DRINK": {
-      const { itemId } = action;
-      const currentCount = state.cart[itemId] || 0;
-      if (currentCount > 0) {
-        return {
-          ...state,
-          cart: {
-            ...state.cart,
-            [itemId]: currentCount - 1,
-          },
-        };
-      }
-      return state;
+    case "CHANGE_ITEM_QUANTITY": {
+      const { itemId, delta } = action;
+      return applyItemQuantityDelta(state, itemId, delta);
     }
     case "CLEAR_TEMPORARY_DRINKS": {
       const newCart = { ...state.cart };
@@ -102,36 +82,7 @@ export const screenState = (state, action) => {
       return { ...state, cart: newCart };
     }
     case "ORGANIZE_CART": {
-      const cart = state.cart;
-      const newCart = { ...cart };
-      let sumM = newCart[PRODUCT_CATEGORIES.PORK_DRINK_SET] || 0;
-      let sumL = newCart[PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE] || 0;
-      for (const breakdownId of DRINK_SUBITEM_IDS) newCart[breakdownId] = 0;
-
-      for (const d of DRINK_TYPE_IDS) {
-        const drinkNo = d % 10;
-        let qty = newCart[d] || 0;
-        const takeM = Math.min(qty, sumM);
-        if (takeM > 0) {
-          const target = PRODUCT_CATEGORIES.PORK_DRINK_SET + drinkNo;
-          newCart[target] = (newCart[target] || 0) + takeM;
-          sumM -= takeM;
-          qty -= takeM;
-        }
-        const takeL = Math.min(qty, sumL);
-        if (takeL > 0) {
-          const target = PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE + drinkNo;
-          newCart[target] = (newCart[target] || 0) + takeL;
-          sumL -= takeL;
-          qty -= takeL;
-        }
-        if (qty > 0) {
-          const target = PRODUCT_CATEGORIES.DRINK_SINGLE + drinkNo;
-          newCart[target] = (newCart[target] || 0) + qty;
-          qty = 0;
-        }
-      }
-      return { ...state, cart: newCart };
+      return { ...state, cart: organizeCart(state.cart) };
     }
     case "REPLACE_CART": {
       return { ...state, cart: { ...state.cart, ...action.cart } };
@@ -143,6 +94,7 @@ export const screenState = (state, action) => {
 
 export function useAppFlow() {
   const [state, dispatch] = useReducer(screenState, INITIAL_APP_STATE);
+  const [selectedTime, setSelectedTime] = useState(INITIAL_UI_STATE.selectedTime);
 
   const goto = useCallback((step) => {
     dispatch({ type: "GOTO", step });
@@ -150,11 +102,7 @@ export function useAppFlow() {
 
   const next = useCallback(() => {
     if (state.step === "menu") {
-      const menuCount =
-        (state.cart[PRODUCT_CATEGORIES.DRINK_SINGLE] || 0) +
-        (state.cart[PRODUCT_CATEGORIES.PORK_DRINK_SET] || 0) +
-        (state.cart[PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE] || 0);
-      if (menuCount === 0) {
+      if (!canProceedFromMenu(state.cart)) {
         dispatch({ type: "GOTO", step: "cart" });
         return;
       }
@@ -176,12 +124,22 @@ export function useAppFlow() {
   }, [state.step]);
 
   const addItems = useCallback((itemId) => {
-    dispatch({ type: "ADD_ITEM", itemId });
+    dispatch({ type: "CHANGE_ITEM_QUANTITY", itemId, delta: 1 });
   }, []);
 
   const removeItems = useCallback((itemId) => {
-    dispatch({ type: "REMOVE_ITEM", itemId });
+    dispatch({ type: "CHANGE_ITEM_QUANTITY", itemId, delta: -1 });
   }, []);
 
-  return { state, dispatch, goto, next, prev, addItems, removeItems };
+  return {
+    state,
+    dispatch,
+    goto,
+    next,
+    prev,
+    addItems,
+    removeItems,
+    selectedTime,
+    setSelectedTime,
+  };
 }

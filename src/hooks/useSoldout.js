@@ -1,3 +1,4 @@
+// 売り切れ情報を取得して画面状態として保持するフック。
 import { useCallback, useEffect, useState } from "react";
 
 import { INITIAL_UI_STATE } from "../constants/initialState";
