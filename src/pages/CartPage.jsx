@@ -1,3 +1,4 @@
+// カート内容と合計金額を表示するページコンポーネント。
 import { Order } from "../components/Order";
 import { StepPageLayout } from "../components/StepPageLayout";
 

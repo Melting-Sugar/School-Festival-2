@@ -1,3 +1,4 @@
+// Square 決済の入力画面を組み立てるページコンポーネント。
 import { PaymentBillingFields } from "../components/PaymentBillingFields";
 import { PaymentActionButton } from "../components/PaymentActionButton";
 

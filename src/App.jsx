@@ -1,3 +1,4 @@
+// アプリ全体の画面遷移と共通レイアウトをまとめるルートコンポーネント。
 import "./styles.css";
 import { useRef } from "react";
 

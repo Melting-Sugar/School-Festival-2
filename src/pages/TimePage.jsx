@@ -1,3 +1,4 @@
+// 予約時刻の選択画面を組み立てるページコンポーネント。
 import { TimeSelect } from "../components/TimeSelect";
 import { StepPageLayout } from "../components/StepPageLayout";
 

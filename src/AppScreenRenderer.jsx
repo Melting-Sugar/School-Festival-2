@@ -1,3 +1,4 @@
+// 現在の画面状態に応じて各ページコンポーネントを切り替えて描画する補助コンポーネント。
 import { Footer } from "./components/Footer";
 import { TitlePage } from "./pages/TitlePage";
 import { MenuPage } from "./pages/MenuPage";
@@ -97,6 +98,7 @@ const renderPage = ({
 };
 
 export const AppScreenRenderer = ({
+// 現在の画面状態に応じて各ページコンポーネントを切り替えて描画する補助コンポーネント。
   step,
   next,
   prev,

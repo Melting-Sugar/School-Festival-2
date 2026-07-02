@@ -1,3 +1,4 @@
+// メニュー画面全体を組み立て、商品カードを並べるページコンポーネント。
 import { Menu } from "../components/Menu";
 import { StepPageLayout } from "../components/StepPageLayout";
 import img_10 from "../image/img_10.jpg";

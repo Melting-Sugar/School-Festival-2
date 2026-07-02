@@ -1,3 +1,4 @@
+// 決済結果と予約時刻の表示をまとめるページコンポーネント。
 import { formatReservedTimeHHmm, parseReservedToDate } from "../utils/orderUtils";
 
 export const PaymentResultPage = ({ paymentState, selectedTime, setPaymentState, dispatch }) => {

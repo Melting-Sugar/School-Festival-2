@@ -1,3 +1,4 @@
+// 決済開始や送信を行うボタンを表示するコンポーネント。
 export const PaymentActionButton = ({ paymentState, setPaymentState, handleSubmitOrderFlow }) => {
   const baseBtnStyle = {
     marginLeft: 10,

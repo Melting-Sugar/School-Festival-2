@@ -1,3 +1,4 @@
+// 注文内容の一覧と数量表示をまとめて描画するコンポーネント。
 import {
   PRODUCT_CATEGORIES,
   SET_DRINK_SUBITEM_MAP,

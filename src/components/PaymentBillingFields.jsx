@@ -1,3 +1,4 @@
+// Square 決済で使う請求先情報の入力欄をまとめたコンポーネント。
 export const PaymentBillingFields = ({ paymentState, setPaymentState }) => {
   return (
     <div style={{ margin: "6px 10px", marginBottom: 12 }}>

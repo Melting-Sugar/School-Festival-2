@@ -1,3 +1,4 @@
+// タイトル画面で使用する見出し表示コンポーネント。
 import logoImg from "../image/logo.jpg";
 
 export const Title = ({ onStart }) => {

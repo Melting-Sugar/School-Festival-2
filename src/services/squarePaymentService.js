@@ -1,3 +1,4 @@
+// Square SDK の読み込みと環境に応じたスクリプト制御を担当するサービス。
 import { SQUARE_ENVIRONMENT, SQUARE_SDK_URLS } from "../constants/config";
 
 export async function loadSquareSdk(env = SQUARE_ENVIRONMENT.PRODUCTION) {

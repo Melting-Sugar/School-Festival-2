@@ -1,3 +1,4 @@
+// 番号札の表示内容を組み立てるページコンポーネント。
 import { Order } from "../components/Order";
 
 export const NumberTagPage = ({ cart, price, names, paymentState }) => {

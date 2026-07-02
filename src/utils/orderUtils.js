@@ -1,3 +1,4 @@
+// 注文アイテムの整形、予約時刻変換、表示用フォーマットを扱うユーティリティ。
 import { ORDER_ALLOWED_IDS } from "../constants/items";
 
 const ALLOWED_IDS = new Set(ORDER_ALLOWED_IDS);

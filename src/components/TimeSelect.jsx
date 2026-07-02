@@ -1,62 +1,14 @@
+// 予約可能な時刻の候補を表示し、選択結果を親へ通知するコンポーネント。
 import React, { useMemo, useEffect, useRef } from "react";
 import { RESERVATION_CONFIG } from "../constants/config";
-
-// 定数
-// const START_OFFSET_MINUTES = 10;
-// const LAST_ORDER_HOUR = 17
-// const LAST_ORDER_MINUTE = 10;
-// const INTERVAL_MINUTES = 5;
-
-//予約可能な時刻オプションの配列を生成する関数
-const generateTimeOptions = (now) => {
-  const startTargetTime = new Date(
-    now.getTime() + RESERVATION_CONFIG.START_OFFSET_MINUTES * 60000
-  );
-
-  const minutes = startTargetTime.getMinutes();
-  const minutesToRound = minutes % RESERVATION_CONFIG.INTERVAL_MINUTES;
-
-  let roundedMinutes = minutes;
-  if (minutesToRound !== 0) {
-    roundedMinutes = minutes + (RESERVATION_CONFIG.INTERVAL_MINUTES - minutesToRound);
-  }
-
-  const startTime = new Date(startTargetTime);
-  startTime.setMinutes(roundedMinutes);
-  startTime.setSeconds(0, 0);
-  startTime.setMilliseconds(0);
-
-  const options = [];
-  let currentTime = startTime;
-
-  while (true) {
-    const currentHour = currentTime.getHours();
-    const currentMinutes = currentTime.getMinutes();
-
-    if (
-      currentHour > RESERVATION_CONFIG.LAST_ORDER_HOUR ||
-      (currentHour === RESERVATION_CONFIG.LAST_ORDER_HOUR && currentMinutes > RESERVATION_CONFIG.LAST_ORDER_MINUTE)
-    ) {
-      break;
-    }
-
-    const timeString = `${String(currentHour).padStart(2, "0")}:${String(
-      currentMinutes
-    ).padStart(2, "0")}`;
-    options.push({ value: timeString, label: timeString });
-
-    currentTime = new Date(currentTime.getTime() + RESERVATION_CONFIG.INTERVAL_MINUTES * 60000);
-  }
-
-  return options;
-};
+import { generateTimeOptions } from "../features/reservation/reservationSchedule";
 
 // 本体
 export const TimeSelect = ({ onTimeChange, testTime }) => {
   const now = useMemo(() => {
     return testTime || new Date();
   }, [testTime]);
-  const timeOptions = useMemo(() => generateTimeOptions(now), [now]);
+  const timeOptions = useMemo(() => generateTimeOptions(now, RESERVATION_CONFIG), [now]);
   const initialTimeRef = useRef(timeOptions[0]?.value || null);
 
   //現在時刻をフォーマット

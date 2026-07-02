@@ -1,3 +1,4 @@
+// 画面下部のナビゲーションと合計表示を担当するフッターコンポーネント。
 import { RESERVATION_CONFIG } from "../constants/config";
 
 export const Footer = ({

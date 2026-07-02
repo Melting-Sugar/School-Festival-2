@@ -1,8 +1,10 @@
 // フロント -> バックエンドの API 呼び出しラッパー。
+// フロントからバックエンドへ送る API 通信だけをまとめるラッパー。
 // Square 設定、売り切れ取得、注文作成、決済、注文取得をこの 1 ファイルに集約する。
 
 import { API_ENDPOINTS, SOLDOUT_FETCH_IDS } from "../constants/config";
 import { SQUARE_FALLBACK_CONFIG } from "../constants/config";
+import { applySoldoutRules } from "../features/soldout/soldoutPolicy";
 
 function isValidAppId(id) {
   if (!id || typeof id !== "string") return false;
@@ -116,18 +118,7 @@ export const Api = {
       }
     }
 
-    soldout[40] = soldout[10];
-    soldout[50] = soldout[20];
-
-    if (soldout[91] && soldout[92] && soldout[93] && soldout[94]) {
-      soldout[30] = true;
-      soldout[40] = true;
-      soldout[50] = true;
-    } else {
-      soldout[30] = false;
-    }
-
-    return { soldout };
+    return applySoldoutRules(soldout);
   },
 
   // 注文を作成する。

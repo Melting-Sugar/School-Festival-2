@@ -1,4 +1,5 @@
 // API エンドポイント
+// API 接続先、タイムアウト、Square 設定、予約関連の共通定数をまとめるファイル。
 export const API_ENDPOINTS = {
   SQUARE_CONFIG: "/api/square/config",
   ITEM_BY_ID: (itemId) => `/api/items/get/byitemId/${itemId}`,

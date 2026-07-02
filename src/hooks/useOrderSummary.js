@@ -1,3 +1,4 @@
+// カート集計や数量差分を計算して画面表示用の数値を返すフック。
 import { useCallback } from "react";
 
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_IDS, DRINK_TYPE_IDS } from "../constants/items";
