@@ -6,7 +6,7 @@ export const PaymentPage = ({ onOpenLegalNotice }) => {
 
       <button style={payBtnStyle}>クレジットカード決済ページへ進む</button>
 
-      <p style={{ color: "#808080" }}>この決済は外部決済サービス「Square」によって行われます</p>
+      <p style={{ color: "#808080" }}>この決済は外部決済サービス「Paysys」によって行われます</p>
       <p style={{ color: "#808080" }}>決済には数秒〜数十秒ほど時間がかかる場合があります。</p>
 
       <p style={{ textAlign: "center", marginTop: "16px" }}>

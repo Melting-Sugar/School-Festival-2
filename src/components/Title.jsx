@@ -42,7 +42,7 @@ export const Title = ({ onStart, onOpenLegalNotice, hasSavedOrder, onViewSavedOr
               となります。
               クーポンをご希望の方は、店舗でのご注文をお願いします。
             </li>
-            <li><b>本システムでの決済には、外部の決済サービス『Square』を利用しています。</b></li>
+            <li><b>本システムでの決済には、外部の決済サービス『Paysys』を利用しています。</b></li>
             <li>
               ご利用にはブラウザの <b>保存機能（Cookie／ローカルストレージ）を有効化</b> する必要があります。
               また、<b>予約と番号札の確認および提示は同一ブラウザ</b> にて行ってください。
