@@ -1,18 +1,37 @@
 // PayPay 決済のモック画面。実際のPayPay連携は行わず、押下でダミーの決済結果へ遷移する。
+import { ORDER_SNAPSHOT_CONFIG } from "../constants/config";
+import { buildOrderSnapshot } from "../features/order/orderSnapshot";
 import { formatDisplayReserved } from "../utils/dateFormat";
+import { setLocalStorageJSON } from "../utils/localStorage";
 import { parseReservedToDate } from "../utils/orderUtils";
 
-export const PaymentPayPayPage = ({ dispatch, setPaymentState, selectedTime, onOpenLegalNotice }) => {
+export const PaymentPayPayPage = ({ dispatch, setPaymentState, selectedTime, cart, onOpenLegalNotice }) => {
   const handlePayWithPayPay = () => {
     const reservedDate = parseReservedToDate(selectedTime);
+    const orderId = "PAYPAY-MOCK-ORDER";
+    const displayReserved = reservedDate ? formatDisplayReserved(reservedDate) : null;
+
+    if (reservedDate) {
+      setLocalStorageJSON(
+        ORDER_SNAPSHOT_CONFIG.KEY,
+        buildOrderSnapshot({
+          createdAtIso: new Date().toISOString(),
+          reservedAtIso: reservedDate.toISOString(),
+          orderId,
+          itemsCart: cart,
+          displayReserved,
+        })
+      );
+    }
+
     setPaymentState((prev) => ({
       ...prev,
       outcome: {
         ok: true,
-        orderId: "PAYPAY-MOCK-ORDER",
+        orderId,
         error: null,
         receiptUrl: null,
-        displayReserved: reservedDate ? formatDisplayReserved(reservedDate) : null,
+        displayReserved,
       },
     }));
     dispatch({ type: "GOTO", step: "paymentResult" });

@@ -30,10 +30,19 @@ const renderPage = ({
   handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
+  hasSavedOrder,
+  onViewSavedOrder,
 }) => {
   switch (step) {
     case "title":
-      return <TitlePage onStart={next} onOpenLegalNotice={onOpenLegalNotice} />;
+      return (
+        <TitlePage
+          onStart={next}
+          onOpenLegalNotice={onOpenLegalNotice}
+          hasSavedOrder={hasSavedOrder}
+          onViewSavedOrder={onViewSavedOrder}
+        />
+      );
     case "menu":
       return (
         <MenuPage
@@ -77,6 +86,7 @@ const renderPage = ({
           dispatch={dispatch}
           setPaymentState={setPaymentState}
           selectedTime={selectedTime}
+          cart={cart}
           onOpenLegalNotice={onOpenLegalNotice}
         />
       );
@@ -125,6 +135,8 @@ export const AppScreenRenderer = ({
   handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
+  hasSavedOrder,
+  onViewSavedOrder,
 }) => {
   return (
     <>
@@ -146,6 +158,8 @@ export const AppScreenRenderer = ({
         handleSubmitOrderFlow,
         dispatch,
         onOpenLegalNotice,
+        hasSavedOrder,
+        onViewSavedOrder,
       })}
 
       {shouldShowFooter(step) && (

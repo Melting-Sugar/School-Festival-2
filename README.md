@@ -107,7 +107,7 @@ npm test
 
 ## 運用上の注意
 
-- 決済や注文の正本はバックエンドです。フロント側の Cookie は補助的な復元用です。
+- 決済や注文の正本はバックエンドです。フロント側の localStorage は補助的な復元用です。
 - 本番では `REACT_APP_USE_MOCK_PAYMENT` と `REACT_APP_USE_TEST_TIME` を必ず `false` にしてください。
 - Square の公開設定値は環境変数で管理してください。
 - Square 設定の取得は、mock モードではフロント fallback を許可し、real モードでは

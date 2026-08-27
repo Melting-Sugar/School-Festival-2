@@ -2,10 +2,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { INITIAL_PAYMENT_STATE } from "../constants/initialState";
-import { COOKIE_CONFIG, TIMEOUTS, TEMP_COOKIE_TEST_KEY, USE_MOCK_PAYMENT } from "../constants/config";
+import { ORDER_SNAPSHOT_CONFIG, TIMEOUTS, TEMP_STORAGE_TEST_KEY, USE_MOCK_PAYMENT } from "../constants/config";
 import { Api } from "../services/apiService";
 import { loadSquareSdk } from "../services/squarePaymentService";
-import { deleteCookie, getCookieJSON, getCookieStr, setCookieJSON, setCookieStr } from "../utils/cookies";
+import { getLocalStorageJSON, removeLocalStorageItem, setLocalStorageJSON } from "../utils/localStorage";
 import { formatDisplayReserved } from "../utils/dateFormat";
 import { buildVerificationDetails } from "../features/payment/paymentValidation";
 import { buildOrderSnapshot } from "../features/order/orderSnapshot";
@@ -71,12 +71,12 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
     }
   }, [clearCardContainer, setCardAttached]);
 
-  const canUseCookies = useCallback(async () => {
+  const canUseLocalStorage = useCallback(async () => {
     try {
-      const key = TEMP_COOKIE_TEST_KEY;
-      setCookieStr(key, "1", TIMEOUTS.COOKIE_TEST_TIMEOUT);
-      const v = getCookieStr(key);
-      deleteCookie(key);
+      const key = TEMP_STORAGE_TEST_KEY;
+      setLocalStorageJSON(key, "1");
+      const v = getLocalStorageJSON(key);
+      removeLocalStorageItem(key);
       return v === "1";
     } catch {
       return false;
@@ -84,8 +84,8 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
   }, []);
 
   const handleSubmitOrderFlow = useCallback(async () => {
-    if (!(await canUseCookies())) {
-      throw new Error("このブラウザではCookieが使えません。");
+    if (!(await canUseLocalStorage())) {
+      throw new Error("このブラウザでは注文情報の保存ができません。");
     }
 
     const reservedDate = parseReservedToDate(selectedTime);
@@ -128,16 +128,15 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
 
       if (payment?.status === "COMPLETED") {
         const displayReserved = formatDisplayReserved(reservedDate);
-        setCookieJSON(
-          COOKIE_CONFIG.KEY,
+        setLocalStorageJSON(
+          ORDER_SNAPSHOT_CONFIG.KEY,
           buildOrderSnapshot({
             createdAtIso,
             reservedAtIso,
             orderId,
             itemsCart: cart,
             displayReserved,
-          }),
-          COOKIE_CONFIG.MAX_AGE_SEC
+          })
         );
 
         setPaymentOutcome({
@@ -167,7 +166,7 @@ export function usePaymentFlow({ step, cart, selectedTime, dispatch, calculateSu
     }
     dispatch({ type: "GOTO", step: "paymentResult" });
   }, [
-    canUseCookies,
+    canUseLocalStorage,
     cart,
     selectedTime,
     paymentState,

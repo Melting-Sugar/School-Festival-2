@@ -6,7 +6,7 @@ import { Header } from "./components/Header";
 import { useAppFlow } from "./hooks/useAppFlow";
 import { useOrderSummary } from "./hooks/useOrderSummary";
 import { useSoldout } from "./hooks/useSoldout";
-import { useCookieRestore } from "./hooks/useCookieRestore";
+import { useOrderSnapshotRestore } from "./hooks/useOrderSnapshotRestore";
 import { usePaymentFlow } from "./hooks/usePaymentFlow";
 import { AppScreenRenderer } from "./AppScreenRenderer";
 import { LegalNoticePage } from "./pages/LegalNoticePage";
@@ -47,7 +47,11 @@ export const App = () => {
     dispatch,
     calculateSumPrice,
   });
-  useCookieRestore({ dispatch, setPaymentState, setSelectedTime });
+  const { hasSavedOrder, viewSavedOrder } = useOrderSnapshotRestore({
+    dispatch,
+    setPaymentState,
+    setSelectedTime,
+  });
 
   return (
     <>
@@ -79,6 +83,8 @@ export const App = () => {
         handleSubmitOrderFlow={handleSubmitOrderFlow}
         dispatch={dispatch}
         onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
+        hasSavedOrder={hasSavedOrder}
+        onViewSavedOrder={viewSavedOrder}
       />
 
       {isLegalNoticeOpen && (

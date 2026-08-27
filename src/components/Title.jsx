@@ -1,7 +1,7 @@
 // タイトル画面で使用する見出し表示コンポーネント。
 import logoImg from "../image/logo.jpg";
 
-export const Title = ({ onStart, onOpenLegalNotice }) => {
+export const Title = ({ onStart, onOpenLegalNotice, hasSavedOrder, onViewSavedOrder }) => {
   return (
     <div style={wrap}>
       <div style={card}>
@@ -23,6 +23,12 @@ export const Title = ({ onStart, onOpenLegalNotice }) => {
           注文に進む
         </button>
 
+        {hasSavedOrder && (
+          <button style={savedOrderBtn} onClick={onViewSavedOrder}>
+            注文番号を確認する
+          </button>
+        )}
+
         {/* 注意事項 */}
         <div style={noticeBox}>
           <h2 style={noticeTitle}>ご利用上の注意</h2>
@@ -38,11 +44,11 @@ export const Title = ({ onStart, onOpenLegalNotice }) => {
             </li>
             <li><b>本システムでの決済には、外部の決済サービス『Square』を利用しています。</b></li>
             <li>
-              ご利用にはブラウザの <b>Cookieを有効化</b> する必要があります。
+              ご利用にはブラウザの <b>保存機能（Cookie／ローカルストレージ）を有効化</b> する必要があります。
               また、<b>予約と番号札の確認および提示は同一ブラウザ</b> にて行ってください。
             </li>
             <li>
-              本システムをご利用の間は、<b>Cookieを消去しないでください。</b>
+              本システムをご利用の間は、<b>ブラウザの閲覧データを消去しないでください。</b>
             </li>
             <li>
               予約時間または閉店時間を過ぎてもご来店いただけない場合や、
@@ -128,6 +134,18 @@ const primaryBtn = {
   border: "3px solid #222",
   background: "#ffe08a",
   width: "calc(100% - 60px)",
+  cursor: "pointer",
+};
+
+const savedOrderBtn = {
+  height: "48px",
+  fontSize: "16px",
+  fontWeight: "bold",
+  borderRadius: "10px",
+  border: "2px solid #222",
+  background: "#fff",
+  width: "calc(100% - 60px)",
+  marginTop: "12px",
   cursor: "pointer",
 };
 
