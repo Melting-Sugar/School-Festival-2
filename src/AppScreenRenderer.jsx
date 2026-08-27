@@ -27,7 +27,6 @@ const renderPage = ({
   currentTestTime,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
   hasSavedOrder,
@@ -72,14 +71,7 @@ const renderPage = ({
     case "paymentMethod":
       return <PaymentMethodPage dispatch={dispatch} onOpenLegalNotice={onOpenLegalNotice} />;
     case "payment":
-      return (
-        <PaymentPage
-          paymentState={paymentState}
-          setPaymentState={setPaymentState}
-          handleSubmitOrderFlow={handleSubmitOrderFlow}
-          onOpenLegalNotice={onOpenLegalNotice}
-        />
-      );
+      return <PaymentPage onOpenLegalNotice={onOpenLegalNotice} />;
     case "paymentPaypay":
       return (
         <PaymentPayPayPage
@@ -132,7 +124,6 @@ export const AppScreenRenderer = ({
   currentTestTime,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
   hasSavedOrder,
@@ -155,7 +146,6 @@ export const AppScreenRenderer = ({
         currentTestTime,
         paymentState,
         setPaymentState,
-        handleSubmitOrderFlow,
         dispatch,
         onOpenLegalNotice,
         hasSavedOrder,

@@ -74,9 +74,9 @@ const parseBooleanEnv = (value, defaultValue = false) => {
 
 export const USE_MOCK_PAYMENT = parseBooleanEnv(
   process.env.REACT_APP_USE_MOCK_PAYMENT,
-  false
+  true
 );
 export const USE_TEST_TIME = parseBooleanEnv(
   process.env.REACT_APP_USE_TEST_TIME,
-  false
+  true
 );

@@ -10,7 +10,6 @@ export const INITIAL_APP_STATE = {
 };
 
 export const INITIAL_PAYMENT_STATE = {
-  phase: "connecting",
   outcome: {
     ok: false,
     orderId: null,
@@ -18,15 +17,6 @@ export const INITIAL_PAYMENT_STATE = {
     receiptUrl: null,
     displayReserved: null,
   },
-  orderId: null,
-  createdAtIso: null,
-  billingInfo: {
-    familyName: "",
-    givenName: "",
-    email: "",
-  },
-  cardAttached: false,
-  isSubmitting: false,
 };
 
 export const INITIAL_UI_STATE = {
