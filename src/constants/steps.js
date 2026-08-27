@@ -7,7 +7,9 @@ export const STEPS = {
   DRINK: "drink",
   CART: "cart",
   TIME: "time",
+  PAYMENT_METHOD: "paymentMethod",
   PAYMENT: "payment",
+  PAYMENT_PAYPAY: "paymentPaypay",
   PAYMENT_RESULT: "paymentResult",
   NUMBER_TAG: "numberTag",
 };

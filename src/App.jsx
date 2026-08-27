@@ -1,6 +1,6 @@
 // アプリ全体の画面遷移と共通レイアウトをまとめるルートコンポーネント。
 import "./styles.css";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Header } from "./components/Header";
 import { useAppFlow } from "./hooks/useAppFlow";
@@ -9,6 +9,7 @@ import { useSoldout } from "./hooks/useSoldout";
 import { useCookieRestore } from "./hooks/useCookieRestore";
 import { usePaymentFlow } from "./hooks/usePaymentFlow";
 import { AppScreenRenderer } from "./AppScreenRenderer";
+import { LegalNoticePage } from "./pages/LegalNoticePage";
 import { PRICES, ITEM_NAMES } from "./constants/items";
 import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
 
@@ -17,6 +18,7 @@ const itemNames = ITEM_NAMES;
 
 export const App = () => {
   const appStartTimeRef = useRef(Date.now());
+  const [isLegalNoticeOpen, setIsLegalNoticeOpen] = useState(false);
 
   const currentTestTime = USE_TEST_TIME
     ? new Date(TEST_DATE.getTime() + (Date.now() - appStartTimeRef.current))
@@ -76,7 +78,12 @@ export const App = () => {
         setPaymentState={setPaymentState}
         handleSubmitOrderFlow={handleSubmitOrderFlow}
         dispatch={dispatch}
+        onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
       />
+
+      {isLegalNoticeOpen && (
+        <LegalNoticePage onClose={() => setIsLegalNoticeOpen(false)} />
+      )}
     </>
   );
 };

@@ -5,7 +5,9 @@ import { MenuPage } from "./pages/MenuPage";
 import { DrinkPage } from "./pages/DrinkPage";
 import { CartPage } from "./pages/CartPage";
 import { TimePage } from "./pages/TimePage";
+import { PaymentMethodPage } from "./pages/PaymentMethodPage";
 import { PaymentPage } from "./pages/PaymentPage";
+import { PaymentPayPayPage } from "./pages/PaymentPayPayPage";
 import { PaymentResultPage } from "./pages/PaymentResultPage";
 import { NumberTagPage } from "./pages/NumberTagPage";
 import { shouldShowFooter } from "./constants/stepRules";
@@ -27,10 +29,11 @@ const renderPage = ({
   setPaymentState,
   handleSubmitOrderFlow,
   dispatch,
+  onOpenLegalNotice,
 }) => {
   switch (step) {
     case "title":
-      return <TitlePage onStart={next} />;
+      return <TitlePage onStart={next} onOpenLegalNotice={onOpenLegalNotice} />;
     case "menu":
       return (
         <MenuPage
@@ -57,12 +60,24 @@ const renderPage = ({
       return <CartPage cart={cart} price={prices} names={itemNames} />;
     case "time":
       return <TimePage onTimeChange={setSelectedTime} testTime={currentTestTime} />;
+    case "paymentMethod":
+      return <PaymentMethodPage dispatch={dispatch} onOpenLegalNotice={onOpenLegalNotice} />;
     case "payment":
       return (
         <PaymentPage
           paymentState={paymentState}
           setPaymentState={setPaymentState}
           handleSubmitOrderFlow={handleSubmitOrderFlow}
+          onOpenLegalNotice={onOpenLegalNotice}
+        />
+      );
+    case "paymentPaypay":
+      return (
+        <PaymentPayPayPage
+          dispatch={dispatch}
+          setPaymentState={setPaymentState}
+          selectedTime={selectedTime}
+          onOpenLegalNotice={onOpenLegalNotice}
         />
       );
     case "paymentResult":
@@ -109,6 +124,7 @@ export const AppScreenRenderer = ({
   setPaymentState,
   handleSubmitOrderFlow,
   dispatch,
+  onOpenLegalNotice,
 }) => {
   return (
     <>
@@ -129,6 +145,7 @@ export const AppScreenRenderer = ({
         setPaymentState,
         handleSubmitOrderFlow,
         dispatch,
+        onOpenLegalNotice,
       })}
 
       {shouldShowFooter(step) && (

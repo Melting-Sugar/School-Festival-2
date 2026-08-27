@@ -1,7 +1,7 @@
 // タイトル画面で使用する見出し表示コンポーネント。
 import logoImg from "../image/logo.jpg";
 
-export const Title = ({ onStart }) => {
+export const Title = ({ onStart, onOpenLegalNotice }) => {
   return (
     <div style={wrap}>
       <div style={card}>
@@ -55,6 +55,12 @@ export const Title = ({ onStart }) => {
             <li>システム障害時は店舗での対応に切り替える場合があります。</li>
           </ul>
         </div>
+
+        <p style={{ marginTop: "16px" }}>
+          <button style={legalLinkStyle} onClick={onOpenLegalNotice}>
+            特定商取引法に基づく表示
+          </button>
+        </p>
       </div>
     </div>
   );
@@ -136,3 +142,13 @@ const noticeBox = {
 
 const noticeTitle = { fontSize: "20px", marginBottom: "8px" };
 const noticeList = { fontSize: "15px", paddingLeft: "20px", lineHeight: "1.6" };
+
+const legalLinkStyle = {
+  background: "none",
+  border: "none",
+  color: "#0066cc",
+  textDecoration: "underline",
+  fontSize: "14px",
+  cursor: "pointer",
+  padding: 0,
+};
