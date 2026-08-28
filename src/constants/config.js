@@ -15,7 +15,6 @@ export const TIMEOUTS = {
   CARD_ATTACH_INTERVAL: 50,    // ms
   PAYMENT_INIT_DELAY: 500,     // ms
   CARD_MOUNT_DELAY: 100,       // ms
-  COOKIE_TEST_TIMEOUT: 60,     // s
 };
 
 // リトライ設定
@@ -24,10 +23,9 @@ export const RETRY_CONFIG = {
   CARD_ATTACH_DELAY: 300,  // ms
 };
 
-// Cookie 設定
-export const COOKIE_CONFIG = {
+// 注文スナップショット（localStorage）設定
+export const ORDER_SNAPSHOT_CONFIG = {
   KEY: "cm_order_v1",
-  MAX_AGE_SEC: 7 * 24 * 60 * 60,      // 7日
   RESERVATION_VALID_DURATION_MS: 60 * 60 * 1000,  // 1時間
 };
 
@@ -63,7 +61,7 @@ export const RESERVATION_CONFIG = {
 
 // テスト用固定値
 export const TEST_DATE = new Date(2025, 8, 22, 12, 0, 0);
-export const TEMP_COOKIE_TEST_KEY = "__cm_cookie_test";
+export const TEMP_STORAGE_TEST_KEY = "__cm_storage_test";
 
 // テスト実行スイッチ
 const parseBooleanEnv = (value, defaultValue = false) => {
@@ -76,9 +74,9 @@ const parseBooleanEnv = (value, defaultValue = false) => {
 
 export const USE_MOCK_PAYMENT = parseBooleanEnv(
   process.env.REACT_APP_USE_MOCK_PAYMENT,
-  false
+  true
 );
 export const USE_TEST_TIME = parseBooleanEnv(
   process.env.REACT_APP_USE_TEST_TIME,
-  false
+  true
 );

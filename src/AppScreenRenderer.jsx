@@ -5,7 +5,9 @@ import { MenuPage } from "./pages/MenuPage";
 import { DrinkPage } from "./pages/DrinkPage";
 import { CartPage } from "./pages/CartPage";
 import { TimePage } from "./pages/TimePage";
+import { PaymentMethodPage } from "./pages/PaymentMethodPage";
 import { PaymentPage } from "./pages/PaymentPage";
+import { PaymentPayPayPage } from "./pages/PaymentPayPayPage";
 import { PaymentResultPage } from "./pages/PaymentResultPage";
 import { NumberTagPage } from "./pages/NumberTagPage";
 import { shouldShowFooter } from "./constants/stepRules";
@@ -25,12 +27,21 @@ const renderPage = ({
   currentTestTime,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
+  onOpenLegalNotice,
+  hasSavedOrder,
+  onViewSavedOrder,
 }) => {
   switch (step) {
     case "title":
-      return <TitlePage onStart={next} />;
+      return (
+        <TitlePage
+          onStart={next}
+          onOpenLegalNotice={onOpenLegalNotice}
+          hasSavedOrder={hasSavedOrder}
+          onViewSavedOrder={onViewSavedOrder}
+        />
+      );
     case "menu":
       return (
         <MenuPage
@@ -57,12 +68,18 @@ const renderPage = ({
       return <CartPage cart={cart} price={prices} names={itemNames} />;
     case "time":
       return <TimePage onTimeChange={setSelectedTime} testTime={currentTestTime} />;
+    case "paymentMethod":
+      return <PaymentMethodPage dispatch={dispatch} onOpenLegalNotice={onOpenLegalNotice} />;
     case "payment":
+      return <PaymentPage onOpenLegalNotice={onOpenLegalNotice} />;
+    case "paymentPaypay":
       return (
-        <PaymentPage
-          paymentState={paymentState}
+        <PaymentPayPayPage
+          dispatch={dispatch}
           setPaymentState={setPaymentState}
-          handleSubmitOrderFlow={handleSubmitOrderFlow}
+          selectedTime={selectedTime}
+          cart={cart}
+          onOpenLegalNotice={onOpenLegalNotice}
         />
       );
     case "paymentResult":
@@ -107,8 +124,10 @@ export const AppScreenRenderer = ({
   currentTestTime,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
+  onOpenLegalNotice,
+  hasSavedOrder,
+  onViewSavedOrder,
 }) => {
   return (
     <>
@@ -127,8 +146,10 @@ export const AppScreenRenderer = ({
         currentTestTime,
         paymentState,
         setPaymentState,
-        handleSubmitOrderFlow,
         dispatch,
+        onOpenLegalNotice,
+        hasSavedOrder,
+        onViewSavedOrder,
       })}
 
       {shouldShowFooter(step) && (

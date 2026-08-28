@@ -33,7 +33,13 @@ export const STEP_RULES = {
       return afterLastOrder;
     },
   },
+  [STEPS.PAYMENT_METHOD]: {
+    showFooter: false,
+  },
   [STEPS.PAYMENT]: {
+    showFooter: false,
+  },
+  [STEPS.PAYMENT_PAYPAY]: {
     showFooter: false,
   },
   [STEPS.PAYMENT_RESULT]: {

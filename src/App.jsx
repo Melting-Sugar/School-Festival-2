@@ -1,15 +1,16 @@
 // アプリ全体の画面遷移と共通レイアウトをまとめるルートコンポーネント。
 import "./styles.css";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Header } from "./components/Header";
 import { useAppFlow } from "./hooks/useAppFlow";
 import { useOrderSummary } from "./hooks/useOrderSummary";
 import { useSoldout } from "./hooks/useSoldout";
-import { useCookieRestore } from "./hooks/useCookieRestore";
-import { usePaymentFlow } from "./hooks/usePaymentFlow";
+import { useOrderSnapshotRestore } from "./hooks/useOrderSnapshotRestore";
 import { AppScreenRenderer } from "./AppScreenRenderer";
+import { LegalNoticePage } from "./pages/LegalNoticePage";
 import { PRICES, ITEM_NAMES } from "./constants/items";
+import { INITIAL_PAYMENT_STATE } from "./constants/initialState";
 import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
 
 const prices = PRICES;
@@ -17,6 +18,7 @@ const itemNames = ITEM_NAMES;
 
 export const App = () => {
   const appStartTimeRef = useRef(Date.now());
+  const [isLegalNoticeOpen, setIsLegalNoticeOpen] = useState(false);
 
   const currentTestTime = USE_TEST_TIME
     ? new Date(TEST_DATE.getTime() + (Date.now() - appStartTimeRef.current))
@@ -38,14 +40,12 @@ export const App = () => {
     calculateSumPrice,
   } = useOrderSummary(state.cart, prices);
   const { isSoldout } = useSoldout(state.step);
-  const { paymentState, setPaymentState, handleSubmitOrderFlow } = usePaymentFlow({
-    step: state.step,
-    cart: state.cart,
-    selectedTime,
+  const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
+  const { hasSavedOrder, viewSavedOrder } = useOrderSnapshotRestore({
     dispatch,
-    calculateSumPrice,
+    setPaymentState,
+    setSelectedTime,
   });
-  useCookieRestore({ dispatch, setPaymentState, setSelectedTime });
 
   return (
     <>
@@ -74,9 +74,15 @@ export const App = () => {
         currentTestTime={currentTestTime}
         paymentState={paymentState}
         setPaymentState={setPaymentState}
-        handleSubmitOrderFlow={handleSubmitOrderFlow}
         dispatch={dispatch}
+        onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
+        hasSavedOrder={hasSavedOrder}
+        onViewSavedOrder={viewSavedOrder}
       />
+
+      {isLegalNoticeOpen && (
+        <LegalNoticePage onClose={() => setIsLegalNoticeOpen(false)} />
+      )}
     </>
   );
 };
