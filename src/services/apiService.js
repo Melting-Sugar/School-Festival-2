@@ -97,12 +97,23 @@ export const Api = {
   // 送るボディは backend の OrderCreateRequest DTO に合わせる必要あり。
   // orderDate（作成日時）, reservedTime（LocalDateTime形式）, items（[{itemId,quantity}]）,
   // servingStatus（@NotNull、初期値0=調理待ち）, paymentStatus（@NotNull、初期値false=未決済）を送る。
+  // drinkCounts（ドリンク種別ごとの合計数、{drinkId: count}）は
+  // docs/backend-requirements.md 5番で提案中の新フィールド。
+  // バックエンド側がまだ対応していない場合、この項目は無視される想定。
   // レスポンスは素の Long（例: 42）がそのまま返る。
-  async createOrder({ items, orderDate, reservedTime, servingStatus = 0, paymentStatus = false }) {
+  async createOrder({
+    items,
+    drinkCounts = {},
+    orderDate,
+    reservedTime,
+    servingStatus = 0,
+    paymentStatus = false,
+  }) {
     const body = {
       orderDate, // LocalDateTime-ish string "yyyy-MM-dd'T'HH:mm:ss"
       reservedTime, // LocalDateTime-ish string
       items, // array of { itemId, quantity } filtered by buildOrderItems on frontend
+      drinkCounts, // { drinkId: count } ドリンク割り振りはバックエンドが行う想定
       servingStatus,
       paymentStatus,
     };

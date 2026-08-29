@@ -1,64 +1,27 @@
 // 注文内容の一覧と数量表示をまとめて描画するコンポーネント。
-import {
-  PRODUCT_CATEGORIES,
-  SET_DRINK_SUBITEM_MAP,
-  ORDER_DISPLAY_SEQUENCE,
-  isSetItemBreakdownId,
-  SINGLE_DRINK_ID_START,
-  SINGLE_DRINK_ID_END,
-  DRINK_TYPE_BASE,
-  DRINK_TYPE_MOD,
-} from "../constants/items";
+// セットとドリンクの紐付け(割り振り)はバックエンドが行う方針のため、フロントでは
+// 「商品(価格あり)」と「選んだドリンク(価格なし、種別ごとの合計数のみ)」を
+// 紐付けない2つの独立したリストとして表示する
+// (docs/backend-requirements.md 5番、cartOrganizer.jsのコメント参照)。
+import { PRODUCT_CATEGORY_IDS, DRINK_TYPE_IDS } from "../constants/items";
 
 export const Order = ({ cart = {}, price = {}, names = {} }) => {
-  // 表示順：PORK_SINGLE → PORK_SINGLE_LARGE → PORK_DRINK_SET → SET内訳 → PORK_DRINK_SET_LARGE → SET_LARGE内訳 → DRINK_SINGLE → SINGLE内訳
-  const displayOrder = ORDER_DISPLAY_SEQUENCE;
-
-  let totalItems = 0; // ※セット内訳(41-44,51-54,31-34)は合計から除外
+  let totalItems = 0;
   let totalPrice = 0;
 
-  const rows = [];
-
-  const isSetDrink = (id) => isSetItemBreakdownId(id);
-  const isSubOf30 = (id) => id >=SINGLE_DRINK_ID_START && id <= SINGLE_DRINK_ID_END; // ← 30の内訳も"セット風"表示にする
-
-  const getLabel = (id) => {
-    // 内部的に商品IDが31-34, 41-44, 41-54の場合、91-94の名前（ドリンク）を流用
-    if (isSubOf30(id) || isSetDrink(id)) {
-      const drinkIndex = id % DRINK_TYPE_MOD; // 1..4
-      const drinkId = DRINK_TYPE_BASE + drinkIndex; // 91..94
-      return names[drinkId] ?? `ドリンク ${drinkIndex}`;
-    }
-    return names[id] ?? `商品 ${id}`;
-  };
-
-  for (const id of displayOrder) {
+  const itemRows = [];
+  for (const id of PRODUCT_CATEGORY_IDS) {
     const qty = cart[id] || 0;
     if (qty <= 0) continue;
 
-    const label = getLabel(id);
-
-    // セット内訳(41-44,51-54) と 30の内訳(31-34) は
-    // 価格を出さず「◯個 セット/内訳」表示、合計にも加算しない
-    if (isSetDrink(id) || isSubOf30(id)) {
-      rows.push(
-        <div key={id} style={setRowStyle}>
-          <p style={{ fontSize: "18px", margin: "6px" }}>{label}</p>
-          <p style={rightLineStyle}>{qty}個</p>
-        </div>
-      );
-      continue;
-    }
-
-    // 通常行（10,20,40,50,30）は金額あり＆合計加算
     const unit = price[id] || 0;
     const sub = unit * qty;
     totalItems += qty;
     totalPrice += sub;
 
-    rows.push(
+    itemRows.push(
       <div key={id} style={normalRowStyle}>
-        <p style={{ fontSize: "18px", margin: "6px" }}>{label}</p>
+        <p style={{ fontSize: "18px", margin: "6px" }}>{names[id] ?? `商品 ${id}`}</p>
         <p style={rightLineStyle}>
           {qty}個　¥{sub.toLocaleString()}
         </p>
@@ -66,7 +29,20 @@ export const Order = ({ cart = {}, price = {}, names = {} }) => {
     );
   }
 
-  if (rows.length === 0) {
+  const drinkRows = [];
+  for (const id of DRINK_TYPE_IDS) {
+    const qty = cart[id] || 0;
+    if (qty <= 0) continue;
+
+    drinkRows.push(
+      <div key={id} style={drinkRowStyle}>
+        <p style={{ fontSize: "18px", margin: "6px" }}>{names[id] ?? `ドリンク ${id}`}</p>
+        <p style={rightLineStyle}>{qty}個</p>
+      </div>
+    );
+  }
+
+  if (itemRows.length === 0 && drinkRows.length === 0) {
     return (
       <div style={normalRowStyle}>
         <p style={{ fontSize: "20px", margin: "6px" }}>カートは空です</p>
@@ -76,7 +52,15 @@ export const Order = ({ cart = {}, price = {}, names = {} }) => {
 
   return (
     <>
-      {rows}
+      {itemRows}
+
+      {drinkRows.length > 0 && (
+        <>
+          <p style={drinkSectionTitleStyle}>選んだドリンク</p>
+          {drinkRows}
+        </>
+      )}
+
       <div
         style={{ ...normalRowStyle, border: "2px solid", marginTop: "30px" }}
       >
@@ -101,10 +85,16 @@ const normalRowStyle = {
   backgroundColor: "#fff",
 };
 
-const setRowStyle = {
+const drinkRowStyle = {
   ...normalRowStyle,
   border: "3px solid #aaa",
-  marginLeft: "40px",
+};
+
+const drinkSectionTitleStyle = {
+  fontSize: "16px",
+  fontWeight: "bold",
+  margin: "16px 6px 4px",
+  color: "#555",
 };
 
 const rightLineStyle = {

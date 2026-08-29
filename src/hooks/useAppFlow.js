@@ -7,7 +7,6 @@ import {
   DRINK_TYPE_IDS,
 } from "../constants/items";
 import { STEPS_ARRAY } from "../constants/steps";
-import { organizeCart } from "../features/order/cartOrganizer";
 import { canProceedFromMenu } from "../features/order/orderEligibility";
 
 const steps = STEPS_ARRAY;
@@ -81,9 +80,6 @@ export const screenState = (state, action) => {
       }
       return { ...state, cart: newCart };
     }
-    case "ORGANIZE_CART": {
-      return { ...state, cart: organizeCart(state.cart) };
-    }
     case "REPLACE_CART": {
       return { ...state, cart: { ...state.cart, ...action.cart } };
     }
@@ -106,10 +102,6 @@ export function useAppFlow() {
         dispatch({ type: "GOTO", step: "cart" });
         return;
       }
-    } else if (state.step === "drink") {
-      dispatch({ type: "ORGANIZE_CART" });
-      dispatch({ type: "NEXT" });
-      return;
     }
     dispatch({ type: "NEXT" });
   }, [state.step, state.cart]);

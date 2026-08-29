@@ -1,20 +1,23 @@
 import { buildOrderItems, formatReservedTimeHHmm, parseReservedToDate } from "../utils/orderUtils";
 
 describe("orderUtils", () => {
-  test("buildOrderItems filters invalid items and zero quantities", () => {
+  test("buildOrderItems splits category items and drink counts, filtering invalid/zero quantities", () => {
     const result = buildOrderItems({
       10: 2,
       30: 1,
-      31: 3,
-      999: 5,
       40: 0,
+      91: 3,
+      92: 0,
+      999: 5,
     });
 
-    expect(result).toEqual([
-      { itemId: 10, quantity: 2 },
-      { itemId: 30, quantity: 1 },
-      { itemId: 31, quantity: 3 },
-    ]);
+    expect(result).toEqual({
+      items: [
+        { itemId: 10, quantity: 2 },
+        { itemId: 30, quantity: 1 },
+      ],
+      drinkCounts: { 91: 3 },
+    });
   });
 
   test("formatReservedTimeHHmm formats a date as HH:mm", () => {

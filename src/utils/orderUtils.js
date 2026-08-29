@@ -1,12 +1,25 @@
 // 注文アイテムの整形、予約時刻変換、表示用フォーマットを扱うユーティリティ。
-import { ORDER_ALLOWED_IDS } from "../constants/items";
+import { PRODUCT_CATEGORY_IDS, DRINK_TYPE_IDS } from "../constants/items";
 
-const ALLOWED_IDS = new Set(ORDER_ALLOWED_IDS);
+// バックエンドへ送る注文データを組み立てる。
+// 商品ID(itemId)とドリンク種別ID(drinkId)は合成しない(docs/backend-requirements.md
+// 5番参照)。items はカテゴリ別の生の数量、drinkCounts はドリンク種別ごとの
+// 合計数(どのカテゴリに属するかは紐付けない生データ)。割り振り計算はバックエンドが行う。
+export const buildOrderItems = (cart) => {
+  const items = PRODUCT_CATEGORY_IDS
+    .map((itemId) => ({ itemId, quantity: Number(cart[itemId]) || 0 }))
+    .filter(({ quantity }) => quantity > 0);
 
-export const buildOrderItems = (cart) =>
-  Object.entries(cart)
-    .map(([id, qty]) => ({ itemId: Number(id), quantity: Number(qty) }))
-    .filter(({ itemId, quantity }) => quantity > 0 && ALLOWED_IDS.has(itemId));
+  const drinkCounts = {};
+  for (const drinkId of DRINK_TYPE_IDS) {
+    const quantity = Number(cart[drinkId]) || 0;
+    if (quantity > 0) {
+      drinkCounts[drinkId] = quantity;
+    }
+  }
+
+  return { items, drinkCounts };
+};
 
 /** Date → "HH:mm"（予約なしは null） */
 export const formatReservedTimeHHmm = (dateOrNull) => {

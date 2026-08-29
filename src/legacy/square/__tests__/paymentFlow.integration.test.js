@@ -64,6 +64,7 @@ describe("paymentFlow integration", () => {
 
     expect(createOrder).toHaveBeenCalledWith({
       items: [{ itemId: 10, quantity: 1 }],
+      drinkCounts: {},
       orderDate: toLocalDateTimeString("2026-07-02T12:00:00.000Z"),
       reservedTime: toLocalDateTimeString("2026-07-02T13:00:00.000Z"),
     });

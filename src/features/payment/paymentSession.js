@@ -15,7 +15,7 @@ export async function createPaymentOrder({
   createOrder,
   createdAtIso = new Date().toISOString(),
 }) {
-  const items = buildOrderItems(cart);
+  const { items, drinkCounts } = buildOrderItems(cart);
   if (items.length === 0) throw new Error("カートが空です");
 
   const reservedDate = parseReservedToDate(selectedTime);
@@ -32,6 +32,7 @@ export async function createPaymentOrder({
     const reservedLocal = toLocalDateTimeString(reservedDate);
     const orderResp = await createOrder({
       items,
+      drinkCounts,
       orderDate: orderDateLocal,
       reservedTime: reservedLocal,
     });
@@ -47,6 +48,7 @@ export async function createPaymentOrder({
     reservedDate,
     reservedAtIso,
     items,
+    drinkCounts,
     amount,
   };
 }
