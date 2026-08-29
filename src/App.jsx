@@ -5,16 +5,12 @@ import { useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { useAppFlow } from "./hooks/useAppFlow";
 import { useOrderSummary } from "./hooks/useOrderSummary";
-import { useSoldout } from "./hooks/useSoldout";
+import { useMenuItems } from "./hooks/useMenuItems";
 import { useOrderSnapshotRestore } from "./hooks/useOrderSnapshotRestore";
 import { AppScreenRenderer } from "./AppScreenRenderer";
 import { LegalNoticePage } from "./pages/LegalNoticePage";
-import { PRICES, ITEM_NAMES } from "./constants/items";
 import { INITIAL_PAYMENT_STATE } from "./constants/initialState";
 import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
-
-const prices = PRICES;
-const itemNames = ITEM_NAMES;
 
 export const App = () => {
   const appStartTimeRef = useRef(Date.now());
@@ -34,12 +30,13 @@ export const App = () => {
     selectedTime,
     setSelectedTime,
   } = useAppFlow();
+  const { prices, itemNames, imagePaths, isSoldout, fetchError, refreshMenuItems } =
+    useMenuItems(state.step);
   const {
     calculateDifferenceOfDrinks,
     calculateSumInMenu,
     calculateSumPrice,
   } = useOrderSummary(state.cart, prices);
-  const { isSoldout } = useSoldout(state.step);
   const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
   const { hasSavedOrder, viewSavedOrder } = useOrderSnapshotRestore({
     dispatch,
@@ -65,7 +62,10 @@ export const App = () => {
         removeItems={removeItems}
         prices={prices}
         itemNames={itemNames}
+        imagePaths={imagePaths}
         isSoldout={isSoldout}
+        menuFetchError={fetchError}
+        onRetryMenuFetch={refreshMenuItems}
         calculateDifferenceOfDrinks={calculateDifferenceOfDrinks}
         calculateSumInMenu={calculateSumInMenu}
         calculateSumPrice={calculateSumPrice}

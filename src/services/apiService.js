@@ -2,9 +2,8 @@
 // フロントからバックエンドへ送る API 通信だけをまとめるラッパー。
 // Square 設定、売り切れ取得、注文作成、決済、注文取得をこの 1 ファイルに集約する。
 
-import { API_ENDPOINTS, SOLDOUT_FETCH_IDS } from "../constants/config";
+import { API_ENDPOINTS } from "../constants/config";
 import { SQUARE_FALLBACK_CONFIG } from "../constants/config";
-import { applySoldoutRules } from "../features/soldout/soldoutPolicy";
 
 function isValidAppId(id) {
   if (!id || typeof id !== "string") return false;
@@ -82,31 +81,15 @@ export const Api = {
     return { ...SQUARE_FALLBACK_CONFIG };
   },
 
-  // 売り切れ状態を取得し、セット商品の連動ルールを反映する。
-  // エンドポイント: GET /api/items/get/byItemIds?itemIds=...&itemIds=...（一括取得）
-  // 返り値: { soldout: { "<itemId>": true|false, ... } }
-  async fetchSoldoutMap() {
-    const soldout = {};
-    for (const id of SOLDOUT_FETCH_IDS) {
-      soldout[id] = false;
+  // 全商品(価格・商品名・画像パス・在庫状況)を取得する。
+  // エンドポイント: GET /api/items/get/allItems
+  // 返り値: [{ itemId, itemName, price, imagePath, available }, ...]
+  async fetchAllItems() {
+    const res = await fetch(API_ENDPOINTS.ALL_ITEMS);
+    if (!res.ok) {
+      throw new Error("商品情報の取得に失敗しました");
     }
-
-    try {
-      const res = await fetch(API_ENDPOINTS.ITEMS_BY_IDS(SOLDOUT_FETCH_IDS));
-      if (res.ok) {
-        const items = await res.json();
-        for (const item of items) {
-          // 明示的に available: false のときだけ売切れ
-          soldout[item.itemId] = item?.available === false;
-        }
-      } else {
-        console.warn("fetchSoldoutMap: request not ok:", res.status);
-      }
-    } catch (e) {
-      console.warn("fetchSoldoutMap: network error", e);
-    }
-
-    return applySoldoutRules(soldout);
+    return res.json();
   },
 
   // 注文を作成する。

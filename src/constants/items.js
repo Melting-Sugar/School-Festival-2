@@ -83,27 +83,8 @@ export const ORDER_DISPLAY_SEQUENCE = [
 export const DRINK_TYPE_BASE = 90;   // ドリンク種別 ID の基数 (90 + index)
 export const DRINK_TYPE_MOD = 10;    // index 抽出用 (id % 10)
 
-// ===== 価格 =====
-export const PRICES = {
-  10: 470,   // PORK_SINGLE
-  20: 670,   // PORK_LARGE
-  30: 150,   // DRINK_SINGLE
-  40: 570,   // PORK_DRINK_SET
-  50: 770,   // PORK_DRINK_SET_LARGE
-};
-
-// ===== 商品名 =====
-export const ITEM_NAMES = {
-  10: "角煮 単品",
-  20: "角煮大盛り 単品",
-  30: "ドリンク 単品",
-  40: "【お得】角煮ドリンクセット",
-  50: "【お得】角煮ドリンクセット大盛り",
-  91: "コーラ",
-  92: "なっちゃんオレンジ",
-  93: "三ツ矢サイダー",
-  94: "烏龍茶",
-};
+// 価格・商品名・画像はバックエンド(GET /api/items/get/allItems)から取得する。
+// モック値・フォールバック値は src/constants/mocks/menuMock.js に集約している。
 
 // ===== カート初期値（全 ID を 0 で初期化） =====
 export const CART_INITIAL = {

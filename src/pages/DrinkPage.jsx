@@ -1,11 +1,9 @@
+// ドリンク選択画面。商品画像はバックエンドのimagePathから取得する
+// (未取得時はMenu.jsxがプレースホルダーを表示する)。
 import { Menu } from "../components/Menu";
 import { StepPageLayout } from "../components/StepPageLayout";
-import img_91 from "../image/img_91.jpg";
-import img_92 from "../image/img_92.jpg";
-import img_93 from "../image/img_93.jpg";
-import img_94 from "../image/img_94.jpg";
 
-export const DrinkPage = ({ itemNames, cart, addItems, removeItems, difference, isSoldout }) => {
+export const DrinkPage = ({ itemNames, imagePaths, cart, addItems, removeItems, difference, isSoldout }) => {
   return (
     <StepPageLayout>
       <p
@@ -68,7 +66,7 @@ export const DrinkPage = ({ itemNames, cart, addItems, removeItems, difference, 
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={img_91}
+            image={imagePaths[91]}
             isSoldout={isSoldout[91]}
           />
           <Menu
@@ -81,7 +79,7 @@ export const DrinkPage = ({ itemNames, cart, addItems, removeItems, difference, 
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={img_92}
+            image={imagePaths[92]}
             isSoldout={isSoldout[92]}
           />
         </div>
@@ -96,7 +94,7 @@ export const DrinkPage = ({ itemNames, cart, addItems, removeItems, difference, 
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={img_93}
+            image={imagePaths[93]}
             isSoldout={isSoldout[93]}
           />
           <Menu
@@ -109,7 +107,7 @@ export const DrinkPage = ({ itemNames, cart, addItems, removeItems, difference, 
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={img_94}
+            image={imagePaths[94]}
             isSoldout={isSoldout[94]}
           />
         </div>

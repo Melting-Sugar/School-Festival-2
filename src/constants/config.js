@@ -2,8 +2,7 @@
 // API 接続先、タイムアウト、Square 設定、予約関連の共通定数をまとめるファイル。
 export const API_ENDPOINTS = {
   SQUARE_CONFIG: "/api/square/config",
-  ITEMS_BY_IDS: (itemIds) =>
-    `/api/items/get/byItemIds?${itemIds.map((id) => `itemIds=${id}`).join("&")}`,
+  ALL_ITEMS: "/api/items/get/allItems",
   ORDER_CREATE: "/api/orders/set",
   PAYMENT_CHARGE: (orderId, sourceId) =>
     `/api/payments/create/${orderId}/${encodeURIComponent(sourceId)}`,
@@ -52,9 +51,6 @@ export const SQUARE_FALLBACK_CONFIG = {
   environment: (process.env.REACT_APP_SQUARE_ENV || "SANDBOX").toUpperCase(),
 };
 
-// 在庫取得対象ID
-export const SOLDOUT_FETCH_IDS = [10, 20, 91, 92, 93, 94];
-
 // 予約時間設定
 export const RESERVATION_CONFIG = {
   START_OFFSET_MINUTES: 10,
@@ -67,7 +63,10 @@ export const RESERVATION_CONFIG = {
 export const TEST_DATE = new Date(2025, 8, 22, 12, 0, 0);
 export const TEMP_STORAGE_TEST_KEY = "__cm_storage_test";
 
-// テスト実行スイッチ
+// ⚠️⚠️⚠️ 本番環境では、以下のモックスイッチ(USE_MOCK_PAYMENT / USE_TEST_TIME /
+// USE_MOCK_MENU)を必ず全てオフ(false)にすること。オンのままだと、決済・時刻・
+// メニューのいずれかが実際のバックエンドに接続されず、モックの値で動作してしまう。
+// 本番用の .env.production では、この3つとも false になっていることを確認すること。
 const parseBooleanEnv = (value, defaultValue = false) => {
   if (value == null || value === "") {
     return defaultValue;
@@ -82,5 +81,11 @@ export const USE_MOCK_PAYMENT = parseBooleanEnv(
 );
 export const USE_TEST_TIME = parseBooleanEnv(
   process.env.REACT_APP_USE_TEST_TIME,
+  true
+);
+// メニュー(価格・商品名・画像)をバックエンドへ接続せず、モック値(constants/mocks/menuMock.js)
+// のみで表示するかどうかのスイッチ。
+export const USE_MOCK_MENU = parseBooleanEnv(
+  process.env.REACT_APP_USE_MOCK_MENU,
   true
 );

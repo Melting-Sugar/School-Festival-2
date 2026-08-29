@@ -20,7 +20,10 @@ const renderPage = ({
   removeItems,
   prices,
   itemNames,
+  imagePaths,
   isSoldout,
+  menuFetchError,
+  onRetryMenuFetch,
   calculateDifferenceOfDrinks,
   selectedTime,
   setSelectedTime,
@@ -47,16 +50,20 @@ const renderPage = ({
         <MenuPage
           prices={prices}
           itemNames={itemNames}
+          imagePaths={imagePaths}
           cart={cart}
           addItems={addItems}
           removeItems={removeItems}
           isSoldout={isSoldout}
+          fetchError={menuFetchError}
+          onRetry={onRetryMenuFetch}
         />
       );
     case "drink":
       return (
         <DrinkPage
           itemNames={itemNames}
+          imagePaths={imagePaths}
           cart={cart}
           addItems={addItems}
           removeItems={removeItems}
@@ -123,7 +130,10 @@ export const AppScreenRenderer = ({
   removeItems,
   prices,
   itemNames,
+  imagePaths,
   isSoldout,
+  menuFetchError,
+  onRetryMenuFetch,
   calculateDifferenceOfDrinks,
   calculateSumInMenu,
   calculateSumPrice,
@@ -147,7 +157,10 @@ export const AppScreenRenderer = ({
         removeItems,
         prices,
         itemNames,
+        imagePaths,
         isSoldout,
+        menuFetchError,
+        onRetryMenuFetch,
         calculateDifferenceOfDrinks,
         selectedTime,
         setSelectedTime,
