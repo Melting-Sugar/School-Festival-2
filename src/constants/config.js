@@ -2,10 +2,13 @@
 // API 接続先、タイムアウト、Square 設定、予約関連の共通定数をまとめるファイル。
 export const API_ENDPOINTS = {
   SQUARE_CONFIG: "/api/square/config",
-  ITEM_BY_ID: (itemId) => `/api/items/get/byitemId/${itemId}`,
-  ORDER_CREATE: "/api/order/set",
-  PAYMENT_CHARGE: (orderId, sourceId) => 
-    `/api/payment/create/${orderId}/${encodeURIComponent(sourceId)}`,
+  ITEMS_BY_IDS: (itemIds) =>
+    `/api/items/get/byItemIds?${itemIds.map((id) => `itemIds=${id}`).join("&")}`,
+  ORDER_CREATE: "/api/orders/set",
+  PAYMENT_CHARGE: (orderId, sourceId) =>
+    `/api/payments/create/${orderId}/${encodeURIComponent(sourceId)}`,
+  // PayPay決済用エンドポイント(バックエンド未実装。契約はStep 2の指示書で提案予定)
+  PAYPAY_CHARGE: (orderId) => `/api/payments/paypay/create/${orderId}`,
   ORDER_GET: (orderId) => `/api/order/get/byorderId/${orderId}`,
 };
 

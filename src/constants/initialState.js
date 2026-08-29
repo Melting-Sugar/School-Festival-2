@@ -10,6 +10,11 @@ export const INITIAL_APP_STATE = {
 };
 
 export const INITIAL_PAYMENT_STATE = {
+  billingInfo: {
+    familyName: "",
+    givenName: "",
+    email: "",
+  },
   outcome: {
     ok: false,
     orderId: null,

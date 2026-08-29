@@ -29,7 +29,8 @@ describe("paymentFlow integration", () => {
       }),
     });
 
-    const createOrder = jest.fn().mockResolvedValue({ orderId: "ORDER-1001" });
+    // backend は素の Long(orderId)を返す実装のため、モックも bare な値を返す。
+    const createOrder = jest.fn().mockResolvedValue("ORDER-1001");
     const loadSquareSdk = jest.fn().mockResolvedValue(undefined);
     const setPaymentState = jest.fn();
     const destroyCardIfAny = jest.fn().mockResolvedValue(undefined);
@@ -64,7 +65,6 @@ describe("paymentFlow integration", () => {
       items: [{ itemId: 10, quantity: 1 }],
       orderDate: toLocalDateTimeString("2026-07-02T12:00:00.000Z"),
       reservedTime: toLocalDateTimeString("2026-07-02T13:00:00.000Z"),
-      amount: 470,
     });
     expect(orderSession.orderId).toBe("ORDER-1001");
 
@@ -72,8 +72,6 @@ describe("paymentFlow integration", () => {
       getSquareConfig: Api.getSquareConfig,
       loadSquareSdk,
       setPaymentState,
-      orderId: orderSession.orderId,
-      createdAtIso: orderSession.createdAtIso,
       useMockPayment: false,
     });
 

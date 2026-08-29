@@ -1,4 +1,6 @@
 // Square カードの初期化とトークン化、実際の支払い送信をまとめるロジック。
+import { MOCK_CARD_PAYMENT_RESULT } from "../../constants/mocks/cardPaymentMock";
+
 export async function ensurePaymentCardMounted({
   cardRef,
   setPaymentState,
@@ -120,7 +122,7 @@ export async function submitPaymentTransaction({
     }
 
     await new Promise((r) => setTimeout(r, 300));
-    return { status: "COMPLETED", receiptUrl: "" };
+    return MOCK_CARD_PAYMENT_RESULT;
   }
 
   if (!cardRef.current) {

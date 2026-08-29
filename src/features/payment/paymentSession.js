@@ -1,6 +1,7 @@
 // 注文作成に必要な入力をまとめ、支払いセッションの前提を作るロジック。
 import { buildOrderItems, parseReservedToDate } from "../../utils/orderUtils";
 import { toLocalDateTimeString } from "../../utils/dateFormat";
+import { MOCK_CARD_ORDER_ID } from "../../constants/mocks/cardPaymentMock";
 
 export async function createPaymentOrder({
   cart,
@@ -21,7 +22,7 @@ export async function createPaymentOrder({
 
   let orderId;
   if (useMockPayment) {
-    orderId = "MOCK-" + Math.floor(Math.random() * 100000);
+    orderId = MOCK_CARD_ORDER_ID();
   } else {
     const orderDateLocal = toLocalDateTimeString(new Date(createdAtIso));
     const reservedLocal = toLocalDateTimeString(reservedDate);
@@ -29,9 +30,8 @@ export async function createPaymentOrder({
       items,
       orderDate: orderDateLocal,
       reservedTime: reservedLocal,
-      amount,
     });
-    orderId = orderResp?.orderId;
+    orderId = orderResp;
     if (!orderId) {
       throw new Error("注文作成に失敗しました (orderId 未取得)");
     }

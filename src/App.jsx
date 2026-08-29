@@ -7,10 +7,10 @@ import { useAppFlow } from "./hooks/useAppFlow";
 import { useOrderSummary } from "./hooks/useOrderSummary";
 import { useSoldout } from "./hooks/useSoldout";
 import { useOrderSnapshotRestore } from "./hooks/useOrderSnapshotRestore";
+import { usePaymentFlow } from "./hooks/usePaymentFlow";
 import { AppScreenRenderer } from "./AppScreenRenderer";
 import { LegalNoticePage } from "./pages/LegalNoticePage";
 import { PRICES, ITEM_NAMES } from "./constants/items";
-import { INITIAL_PAYMENT_STATE } from "./constants/initialState";
 import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
 
 const prices = PRICES;
@@ -40,7 +40,13 @@ export const App = () => {
     calculateSumPrice,
   } = useOrderSummary(state.cart, prices);
   const { isSoldout } = useSoldout(state.step);
-  const [paymentState, setPaymentState] = useState(INITIAL_PAYMENT_STATE);
+  const { paymentState, setPaymentState, handleSubmitOrderFlow } = usePaymentFlow({
+    step: state.step,
+    cart: state.cart,
+    selectedTime,
+    dispatch,
+    calculateSumPrice,
+  });
   const { hasSavedOrder, viewSavedOrder } = useOrderSnapshotRestore({
     dispatch,
     setPaymentState,
@@ -74,6 +80,7 @@ export const App = () => {
         currentTestTime={currentTestTime}
         paymentState={paymentState}
         setPaymentState={setPaymentState}
+        handleSubmitOrderFlow={handleSubmitOrderFlow}
         dispatch={dispatch}
         onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
         hasSavedOrder={hasSavedOrder}

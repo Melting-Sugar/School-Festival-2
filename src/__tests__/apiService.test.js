@@ -39,19 +39,12 @@ describe("Api.getSquareConfig", () => {
     process.env.REACT_APP_SQUARE_LOCATION_ID = "mock-location";
     process.env.REACT_APP_SQUARE_ENV = "sandbox";
 
-    global.fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        headers: { get: jest.fn().mockReturnValue("application/json") },
-        text: jest.fn().mockResolvedValue(""),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        text: jest.fn().mockResolvedValue(""),
-      });
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      headers: { get: jest.fn().mockReturnValue("application/json") },
+      text: jest.fn().mockResolvedValue(""),
+    });
 
     const { Api } = require("../services/apiService");
 
@@ -61,6 +54,8 @@ describe("Api.getSquareConfig", () => {
       environment: "SANDBOX",
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+    // 存在しない旧フォールバック(/api/payment/get/ApplicationId)は呼ばず、
+    // /api/square/config の失敗後は直接 SQUARE_FALLBACK_CONFIG へ進む。
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });

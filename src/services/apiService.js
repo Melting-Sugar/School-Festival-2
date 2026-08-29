@@ -76,80 +76,51 @@ export const Api = {
       }
     }
 
-    if (!useMockPayment) {
-      throw new Error("Square設定の取得に失敗しました");
-    }
-
-    // 2) 旧実装互換: テキストで ApplicationId を返す endpoint を試す。
-    try {
-      const res2 = await fetch("/api/payment/get/ApplicationId");
-      if (res2.ok) {
-        const text = (await res2.text()).trim();
-        if (isValidAppId(text)) {
-          return {
-            applicationId: text,
-            locationId: SQUARE_FALLBACK_CONFIG.locationId,
-            environment: SQUARE_FALLBACK_CONFIG.environment,
-          };
-        } else {
-          console.warn(
-            "getSquareConfig: /api/payment/get/ApplicationId returned invalid id:",
-            text
-          );
-        }
-      } else {
-        console.warn(
-          "getSquareConfig: /api/payment/get/ApplicationId returned not ok:",
-          res2.status
-        );
-      }
-    } catch (e) {
-      console.warn(
-        "getSquareConfig: fetch error /api/payment/get/ApplicationId:",
-        e
-      );
-    }
-
-    // 3) 最後はフロント内 fallback で継続する。
+    // 2) 最後はフロント内 fallback で継続する。
     console.warn("getSquareConfig: using SQUARE_FALLBACK_CONFIG (development only)");
     return { ...SQUARE_FALLBACK_CONFIG };
   },
 
   // 売り切れ状態を取得し、セット商品の連動ルールを反映する。
-  // 各エンドポイント: GET /api/items/get/byitemId/{itemId}
+  // エンドポイント: GET /api/items/get/byItemIds?itemIds=...&itemIds=...（一括取得）
   // 返り値: { soldout: { "<itemId>": true|false, ... } }
   async fetchSoldoutMap() {
     const soldout = {};
-
     for (const id of SOLDOUT_FETCH_IDS) {
-      try {
-        const res = await fetch(API_ENDPOINTS.ITEM_BY_ID(id));
-        if (!res.ok) {
-          soldout[id] = false;
-          continue;
+      soldout[id] = false;
+    }
+
+    try {
+      const res = await fetch(API_ENDPOINTS.ITEMS_BY_IDS(SOLDOUT_FETCH_IDS));
+      if (res.ok) {
+        const items = await res.json();
+        for (const item of items) {
+          // 明示的に available: false のときだけ売切れ
+          soldout[item.itemId] = item?.available === false;
         }
-        // 明示的に available: false のときだけ売切れ
-        const item = await res.json();
-        soldout[id] = item?.available === false;
-      } catch (e) {
-        soldout[id] = false;
-        console.warn(`fetchSoldoutMap: network error for item ${id}`, e);
+      } else {
+        console.warn("fetchSoldoutMap: request not ok:", res.status);
       }
+    } catch (e) {
+      console.warn("fetchSoldoutMap: network error", e);
     }
 
     return applySoldoutRules(soldout);
   },
 
   // 注文を作成する。
-  // 注文作成: POST /api/order/set
-  // 送るボディは backend の OrderRequest DTO に合わせる必要あり。
-  // 要件に合わせ、orderDate（作成日時）, reservedTime（LocalDateTime形式）, items（[{itemId,quantity}]）を送る。
-  async createOrder({ items, orderDate, reservedTime, amount }) {
+  // 注文作成: POST /api/orders/set
+  // 送るボディは backend の OrderCreateRequest DTO に合わせる必要あり。
+  // orderDate（作成日時）, reservedTime（LocalDateTime形式）, items（[{itemId,quantity}]）,
+  // servingStatus（@NotNull、初期値0=調理待ち）, paymentStatus（@NotNull、初期値false=未決済）を送る。
+  // レスポンスは素の Long（例: 42）がそのまま返る。
+  async createOrder({ items, orderDate, reservedTime, servingStatus = 0, paymentStatus = false }) {
     const body = {
-      orderDate,// LocalDateTime-ish string "yyyy-MM-dd'T'HH:mm:ss"
+      orderDate, // LocalDateTime-ish string "yyyy-MM-dd'T'HH:mm:ss"
       reservedTime, // LocalDateTime-ish string
-      items,// array of { itemId, quantity } filtered by buildOrderItems on frontend
-      amount,
+      items, // array of { itemId, quantity } filtered by buildOrderItems on frontend
+      servingStatus,
+      paymentStatus,
     };
     const res = await fetch(API_ENDPOINTS.ORDER_CREATE, {
       method: "POST",
@@ -161,11 +132,11 @@ export const Api = {
       console.warn("createOrder failed:", res.status, text);
       throw new Error("注文作成に失敗しました");
     }
-    return res.json();
+    return res.json(); // 素の orderId(Long)
   },
 
   // Square の sourceId を使って決済を実行する。
-  // backend defines: POST /api/payment/create/{orderId}/{sourceId}
+  // backend defines: POST /api/payments/create/{orderId}/{sourceId}
   async chargeOrder({ orderId, sourceId }) {
     const url = API_ENDPOINTS.PAYMENT_CHARGE(orderId, sourceId);
     const res = await fetch(url, {
@@ -177,7 +148,24 @@ export const Api = {
       console.warn("chargeOrder failed:", res.status, text);
       throw new Error("決済APIが失敗しました");
     }
-    return res.json(); // { status:"APPROVED"|"DECLINED", receiptUrl?, error? }
+    return res.json(); // backend PaymentResponse: { paymentId, status, amount, currency, hasKeyError }
+  },
+
+  // PayPayで決済を実行する。
+  // backend未実装のエンドポイント(契約はStep 2のバックエンド指示書で提案予定)。
+  // 実バックエンドが対応するまでは失敗する想定。
+  async chargePayPay({ orderId }) {
+    const url = API_ENDPOINTS.PAYPAY_CHARGE(orderId);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.warn("chargePayPay failed:", res.status, text);
+      throw new Error("PayPay決済APIが失敗しました");
+    }
+    return res.json();
   },
 
   // 注文情報を取得する。
