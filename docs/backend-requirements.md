@@ -1,40 +1,34 @@
-# バックエンドへの要望・修正依頼
+# バックエンド、従業員用UIフロントエンドへの要望・修正依頼
 
+To:hrs（永島）, ヴァg（高野）
 対象リポジトリ: `Shrssss/CDMTs-payment-application`(`release`ブランチ)
 作成日: 2026-08-29
-作成者: フロントエンド(`School-Festival-2`)担当より
+作成者: フロントエンド(`School-Festival-2`)担当・狼狐フィロ（伊知川）
 
-`paymentApps_仕様書.pdf` の内容を前提に、フロントエンド側の実装・調査で判明した追加の修正依頼・仕様変更提案をまとめたものです。フロントエンド側のコードには一切手を加えていません(このリポジトリのみ変更が必要です)。
+`paymentApps_仕様書.pdf` の内容を前提に、フロントエンド側の実装・調査で判明した追加の修正依頼・仕様変更提案をまとめたものです。
 
 ---
+## To ヴァg
 
-## 緊急度高(セキュリティ)
+### 1. 管理画面(`cooking.js`/`handover.js`/`monitor.js`/`stock.js`)の同期
+これらは本リポジトリの`paymentApps/src/main/resources/static/js/`配下に同梱されていますが、2026年8月の`OrderController`/`ItemController`の大規模リファクタに追従しておらず、旧パス(例: `cooking.js`が呼ぶ`/order/get/bystatus/0`)を呼び続けています。現行のController実装のパスに合わせて更新をお願いします。
 
-### 1. `updatePaymentStatus` エンドポイントの保護
+---
+## To hrs
 
-`PUT /api/orders/update/paymentStatus/{orderId}/{paymentStatus}` は現在、呼び出し元の認証・認可を一切行っていません。
+### 2. `updatePaymentStatus` エンドポイントの保護
 
-- 対面決済(スタッフが客から直接現金/カードで受け取り、手動で支払い済みにする)用として正当な用途があると理解しています。**削除ではなく、リクエストに正当性の証明(認証)を要求する保護が必要です。**
-- **CORS設定は代替になりません。** CORSはブラウザが「JavaScriptにレスポンスを読ませてよいか」を制御する仕組みであり、サーバー側のアクセス制御ではありません。curl・Postman等の非ブラウザクライアントには一切効果がなく、また現在のCORS許可オリジン(`https://cdmts-pay.codemates.net`)は客が使う注文画面のドメインそのものなので、客が自分のブラウザの開発者コンソールから叩いても通ってしまいます。
-- 具体的な保護方式(ログイン・APIキー・店舗内ネットワーク制限等)は別途相談させてください。
+以前、Discord上で送った通りですが、
+`PUT /api/orders/update/paymentStatus/{orderId}/{paymentStatus}` は現在、呼び出し元の認証・認可を行っていません。
+削除ではなく、リクエストに正当性の証明(認証)を要求する保護が必要です。
 
-参考: 本エンドポイントは`2026-08-21`時点で有効だったものが、`2026-08-23 15:19`(`bd18fc37`)に`"!! 使用しない !!"`という警告付きでコメントアウトされ無効化されましたが、その約1日後`2026-08-24 16:56`(`a4e72939`)に警告ごと削除され再度有効化されています。意図的な復活であればこのまま問題ありませんが、認証を追加しないままの公開は避けてください。
-
-### 2. `createPayment` のトークン保護
+### 3. `createPayment` のトークン保護
 
 `POST /api/payments/create/{orderId}/{sourceId}` は、呼び出し元が対象`orderId`の正当な本人であることを検証していません。`orderId`は連番でありAPIを叩けば誰でも生成できてしまうため、他人の注文IDを指定して決済結果を紐付けることが可能です。下記「6. 注文照会用トークンAPI」のトークンを用いた検証を組み込んでください。
-
-### 3. 管理画面(`cooking.js`/`handover.js`/`monitor.js`/`stock.js`)の同期
-
-これらは本リポジトリの`paymentApps/src/main/resources/static/js/`配下に同梱されていますが、2026年8月の`OrderController`/`ItemController`の大規模リファクタに追従しておらず、旧パス(例: `cooking.js`が呼ぶ`/order/get/bystatus/0`)を呼び続けています。現行のController実装のパスに合わせて更新をお願いします。
 
 ### 4. `OrderResponse` への `paymentStatus` 再追加
 
 現行の`OrderResponse`(`model/dto/OrderResponse.java`)には`paymentStatus`が含まれていません。`cooking.js`側には「`paymentStatus`が`true`の注文のみ表示する」ロジックが存在するため、このフィールドが無いと該当ロジックが機能しません(旧設計ではエンティティを直接返していたため自動的に含まれていました)。業務ルールとして必要であれば追加をお願いします。
-
----
-
-## 機能拡張
 
 ### 5. ドリンク割り振りのサーバー側実装
 
@@ -105,9 +99,8 @@
 - 「価格計算API(表示用)」と「注文作成API(実際に使う金額を決定)」を別々に実装すると、片方だけ修正されて金額がズレる不具合が起きえます。**両APIは同じ価格計算ロジック(同一の関数/メソッド)を共有する実装にしてください。**
 - Square/PayPayへ渡す決済金額は、注文作成APIのレスポンスで返された金額をそのまま使う想定です(フロント側では再計算しません)。表示・注文作成・決済の3箇所で金額の発生源を1つに統一してください。
 
-### 8. PayPay決済APIの新設
-
-フロントエンド側は `POST /api/payments/paypay/create/{orderId}` という契約を仮に想定して実装済みです(現状はバックエンド未実装のため失敗します)。契約は既存の`POST /api/payments/create/{orderId}/{sourceId}`(Square用)に準ずる形を想定していますが、実際のPayPay連携方式(リダイレクト型かAPI直接連携か等)に応じて調整をお願いします。実装が固まり次第、フロント側のエンドポイント定義(`src/constants/config.js`の`PAYPAY_CHARGE`)を合わせます。
+### 8. Squareは完全廃止して、クレカとPayPayをPaySys経由で提供する変更
+これについては、フロントエンドの担当者が私でなく後続である可能性が高いため、彼と相談してください（モックは私が作ります）。
 
 ---
 
@@ -115,4 +108,5 @@
 
 ### 9. Square認証情報のハードコード重複・Sandbox/Production表記の不整合
 
-`PaymentService.getSquareClient()`にapplicationId等がハードコードされている点、`createPayment()`内のコメントが`//<- sandbox`となっているのに`Environment.PRODUCTION`を使用している点は、仕様書で既に指摘済みです。設定値の一元管理と、Sandbox/Production環境の実態確認をお願いします。
+`PaymentService.getSquareClient()`にapplicationId等がハードコードされている点、`createPayment()`内のコメントが`//<- sandbox`となっているのに`Environment.PRODUCTION`を使用している点が、あなたの送った仕様書で指摘されています。設定値の一元管理と、Sandbox/Production環境の実態確認をお願いします。
+まあSquare廃止するからええか

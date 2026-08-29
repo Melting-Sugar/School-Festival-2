@@ -6,7 +6,6 @@ export const PaymentPayPayPage = ({
   setPaymentState,
   selectedTime,
   cart,
-  calculateSumPrice,
   onOpenLegalNotice,
 }) => {
   const { handlePayWithPayPay, submitting } = usePayPayPaymentFlow({
@@ -14,7 +13,6 @@ export const PaymentPayPayPage = ({
     selectedTime,
     dispatch,
     setPaymentState,
-    calculateSumPrice,
   });
 
   return (

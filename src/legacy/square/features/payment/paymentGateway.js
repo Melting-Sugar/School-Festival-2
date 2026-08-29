@@ -1,3 +1,4 @@
+// ⚠️ 未使用(Square廃止に伴い隔離。importしないこと)
 // Square カードの初期化とトークン化、実際の支払い送信をまとめるロジック。
 import { MOCK_CARD_PAYMENT_RESULT } from "../../constants/mocks/cardPaymentMock";
 

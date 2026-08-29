@@ -13,6 +13,7 @@ function isValidAppId(id) {
 }
 
 export const Api = {
+  // ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から呼び出さないこと)
   // Square の applicationId / locationId / environment を取得する。
   async getSquareConfig({ useMockPayment = false } = {}) {
     try {
@@ -135,6 +136,7 @@ export const Api = {
     return res.json(); // 素の orderId(Long)
   },
 
+  // ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から呼び出さないこと)
   // Square の sourceId を使って決済を実行する。
   // backend defines: POST /api/payments/create/{orderId}/{sourceId}
   async chargeOrder({ orderId, sourceId }) {
@@ -149,23 +151,6 @@ export const Api = {
       throw new Error("決済APIが失敗しました");
     }
     return res.json(); // backend PaymentResponse: { paymentId, status, amount, currency, hasKeyError }
-  },
-
-  // PayPayで決済を実行する。
-  // backend未実装のエンドポイント(契約はStep 2のバックエンド指示書で提案予定)。
-  // 実バックエンドが対応するまでは失敗する想定。
-  async chargePayPay({ orderId }) {
-    const url = API_ENDPOINTS.PAYPAY_CHARGE(orderId);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.warn("chargePayPay failed:", res.status, text);
-      throw new Error("PayPay決済APIが失敗しました");
-    }
-    return res.json();
   },
 
   // 注文情報を取得する。

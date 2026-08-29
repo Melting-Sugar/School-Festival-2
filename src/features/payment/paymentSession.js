@@ -1,7 +1,11 @@
 // 注文作成に必要な入力をまとめ、支払いセッションの前提を作るロジック。
+// 決済手段(Square/PayPay/PaySys等)に依存しない汎用ロジック。
+// 現在、実際に呼び出しているアクティブな画面はない(カード・PayPayともに
+// PaySysモックへ一本化されたため)。将来PaySysの実装を行う際の参考として残す。
 import { buildOrderItems, parseReservedToDate } from "../../utils/orderUtils";
 import { toLocalDateTimeString } from "../../utils/dateFormat";
-import { MOCK_CARD_ORDER_ID } from "../../constants/mocks/cardPaymentMock";
+
+const generateMockOrderId = () => "MOCK-" + Math.floor(Math.random() * 100000);
 
 export async function createPaymentOrder({
   cart,
@@ -22,7 +26,7 @@ export async function createPaymentOrder({
 
   let orderId;
   if (useMockPayment) {
-    orderId = MOCK_CARD_ORDER_ID();
+    orderId = generateMockOrderId();
   } else {
     const orderDateLocal = toLocalDateTimeString(new Date(createdAtIso));
     const reservedLocal = toLocalDateTimeString(reservedDate);

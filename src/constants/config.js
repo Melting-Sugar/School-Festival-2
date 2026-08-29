@@ -7,8 +7,6 @@ export const API_ENDPOINTS = {
   ORDER_CREATE: "/api/orders/set",
   PAYMENT_CHARGE: (orderId, sourceId) =>
     `/api/payments/create/${orderId}/${encodeURIComponent(sourceId)}`,
-  // PayPay決済用エンドポイント(バックエンド未実装。契約はStep 2の指示書で提案予定)
-  PAYPAY_CHARGE: (orderId) => `/api/payments/paypay/create/${orderId}`,
   ORDER_GET: (orderId) => `/api/order/get/byorderId/${orderId}`,
 };
 
@@ -32,18 +30,21 @@ export const ORDER_SNAPSHOT_CONFIG = {
   RESERVATION_VALID_DURATION_MS: 60 * 60 * 1000,  // 1時間
 };
 
+// ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から参照しないこと)
 // Square SDK 環境
 export const SQUARE_ENVIRONMENT = {
   PRODUCTION: "PRODUCTION",
   SANDBOX: "SANDBOX",
 };
 
+// ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から参照しないこと)
 // Square SDK URLs（環境キーでアクセス）
 export const SQUARE_SDK_URLS = {
   PRODUCTION: "https://web.squarecdn.com/v1/square.js",
   SANDBOX: "https://sandbox.web.squarecdn.com/v1/square.js",
 };
 
+// ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から参照しないこと)
 // Square の fallback 設定は環境変数から読む。
 export const SQUARE_FALLBACK_CONFIG = {
   applicationId: process.env.REACT_APP_SQUARE_APP_ID || "",

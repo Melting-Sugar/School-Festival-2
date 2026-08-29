@@ -25,10 +25,8 @@ const renderPage = ({
   selectedTime,
   setSelectedTime,
   currentTestTime,
-  calculateSumPrice,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
   hasSavedOrder,
@@ -75,9 +73,10 @@ const renderPage = ({
     case "payment":
       return (
         <PaymentPage
-          paymentState={paymentState}
+          dispatch={dispatch}
           setPaymentState={setPaymentState}
-          handleSubmitOrderFlow={handleSubmitOrderFlow}
+          selectedTime={selectedTime}
+          cart={cart}
           onOpenLegalNotice={onOpenLegalNotice}
         />
       );
@@ -88,7 +87,6 @@ const renderPage = ({
           setPaymentState={setPaymentState}
           selectedTime={selectedTime}
           cart={cart}
-          calculateSumPrice={calculateSumPrice}
           onOpenLegalNotice={onOpenLegalNotice}
         />
       );
@@ -134,7 +132,6 @@ export const AppScreenRenderer = ({
   currentTestTime,
   paymentState,
   setPaymentState,
-  handleSubmitOrderFlow,
   dispatch,
   onOpenLegalNotice,
   hasSavedOrder,
@@ -155,10 +152,8 @@ export const AppScreenRenderer = ({
         selectedTime,
         setSelectedTime,
         currentTestTime,
-        calculateSumPrice,
         paymentState,
         setPaymentState,
-        handleSubmitOrderFlow,
         dispatch,
         onOpenLegalNotice,
         hasSavedOrder,

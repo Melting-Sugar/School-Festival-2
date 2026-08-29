@@ -1,4 +1,4 @@
-// PayPay決済の送信・結果更新をまとめて扱うフック。
+// クレジットカード決済(PaySys経由)の送信・結果更新をまとめて扱うフック。
 // PaySys(カード・PayPayとも)の実バックエンド連携は後任フロントエンド開発者が担当する。
 // USE_MOCK_PAYMENTがオンの場合のみ、モックで決済成功画面まで到達できる迂回策であり、
 // 実際のAPI接続(バックエンドへの注文作成・決済実行)は一切行っていない。
@@ -9,12 +9,12 @@ import { buildOrderSnapshot } from "../features/order/orderSnapshot";
 import { formatDisplayReserved } from "../utils/dateFormat";
 import { setLocalStorageJSON } from "../utils/localStorage";
 import { parseReservedToDate } from "../utils/orderUtils";
-import { MOCK_PAYPAY_ORDER_ID } from "../constants/mocks/paypayPaymentMock";
+import { MOCK_PAYSYS_CARD_ORDER_ID } from "../constants/mocks/paysysCardMock";
 
-export function usePayPayPaymentFlow({ cart, selectedTime, dispatch, setPaymentState }) {
+export function useCardPaymentFlow({ cart, selectedTime, dispatch, setPaymentState }) {
   const [submitting, setSubmitting] = useState(false);
 
-  const handlePayWithPayPay = useCallback(async () => {
+  const handlePayWithCard = useCallback(async () => {
     const reservedDate = parseReservedToDate(selectedTime);
     if (!reservedDate) {
       alert("予約時刻が不正です");
@@ -27,7 +27,7 @@ export function usePayPayPaymentFlow({ cart, selectedTime, dispatch, setPaymentS
     const displayReserved = formatDisplayReserved(reservedDate);
 
     if (USE_MOCK_PAYMENT) {
-      const orderId = MOCK_PAYPAY_ORDER_ID;
+      const orderId = MOCK_PAYSYS_CARD_ORDER_ID;
       setLocalStorageJSON(
         ORDER_SNAPSHOT_CONFIG.KEY,
         buildOrderSnapshot({
@@ -49,13 +49,13 @@ export function usePayPayPaymentFlow({ cart, selectedTime, dispatch, setPaymentS
         },
       }));
     } else {
-      // PaySys(PayPay)の実装は後任フロントエンド開発者が担当。ここでは未実装として扱う。
+      // PaySys(カード)の実装は後任フロントエンド開発者が担当。ここでは未実装として扱う。
       setPaymentState((prev) => ({
         ...prev,
         outcome: {
           ok: false,
           orderId: null,
-          error: "PayPay決済(PaySys)は未実装です。後任担当者が実装予定です。",
+          error: "クレジットカード決済(PaySys)は未実装です。後任担当者が実装予定です。",
           receiptUrl: null,
           displayReserved,
         },
@@ -66,5 +66,5 @@ export function usePayPayPaymentFlow({ cart, selectedTime, dispatch, setPaymentS
     dispatch({ type: "GOTO", step: "paymentResult" });
   }, [cart, selectedTime, dispatch, setPaymentState]);
 
-  return { handlePayWithPayPay, submitting };
+  return { handlePayWithCard, submitting };
 }

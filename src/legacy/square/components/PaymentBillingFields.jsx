@@ -1,3 +1,4 @@
+// ⚠️ 未使用(Square廃止に伴い隔離。importしないこと)
 // カード決済の請求先情報(苗字・名前・メールアドレス)入力フォーム。
 export const PaymentBillingFields = ({ paymentState, setPaymentState }) => {
   const billingInfo = paymentState.billingInfo || {

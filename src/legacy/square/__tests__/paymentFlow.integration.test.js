@@ -1,12 +1,13 @@
+// ⚠️ 未使用(Square廃止に伴い隔離)
 // 本番相当の支払いフローを、注文作成からSquare決済完了まで通して確認する統合テスト。
-import { Api } from "../services/apiService";
-import { createPaymentOrder } from "../features/payment/paymentSession";
+import { Api } from "../../../services/apiService";
+import { createPaymentOrder } from "../../../features/payment/paymentSession";
 import { initializePaymentScreen } from "../features/payment/paymentScreen";
 import {
   ensurePaymentCardMounted,
   submitPaymentTransaction,
 } from "../features/payment/paymentGateway";
-import { toLocalDateTimeString } from "../utils/dateFormat";
+import { toLocalDateTimeString } from "../../../utils/dateFormat";
 
 describe("paymentFlow integration", () => {
   const originalFetch = global.fetch;

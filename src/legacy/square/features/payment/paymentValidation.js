@@ -1,5 +1,6 @@
+// ⚠️ 未使用(Square廃止に伴い隔離。importしないこと)
 // Square 決済に渡す請求先情報を検証し、verification details を組み立てるロジック。
-import { isValidEmail } from "../../utils/validation";
+import { isValidEmail } from "../../../../utils/validation";
 
 export function buildVerificationDetails(amountYen, billingContact) {
   if (

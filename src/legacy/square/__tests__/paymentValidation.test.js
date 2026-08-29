@@ -1,3 +1,4 @@
+// ⚠️ 未使用(Square廃止に伴い隔離)
 // paymentValidation の請求先情報チェックと verification details 生成を確認するテスト。
 import { buildVerificationDetails } from "../features/payment/paymentValidation";
 

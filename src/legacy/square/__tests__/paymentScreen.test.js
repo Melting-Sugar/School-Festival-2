@@ -1,3 +1,4 @@
+// ⚠️ 未使用(Square廃止に伴い隔離)
 // paymentScreen の初期化処理と Square SDK 読み込みを確認するテスト。
 import { initializePaymentScreen } from "../features/payment/paymentScreen";
 

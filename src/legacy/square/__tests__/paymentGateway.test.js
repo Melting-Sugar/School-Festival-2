@@ -1,3 +1,4 @@
+// ⚠️ 未使用(Square廃止に伴い隔離)
 // paymentGateway の入力検証と決済前提の分岐を確認するテスト。
 import { submitPaymentTransaction } from "../features/payment/paymentGateway";
 

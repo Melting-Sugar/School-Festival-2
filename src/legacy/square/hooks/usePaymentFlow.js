@@ -1,25 +1,28 @@
+// ⚠️ 未使用(Square廃止に伴い隔離。importしないこと)
+// 決済導線はSquareを完全廃止し、PaySys(モックのみ、実装は後任)に一本化された。
+// このファイルは削除せず参考として残しているが、どこからも呼び出してはならない。
 // 決済画面の初期化、カード接続、送信、結果更新をまとめて扱うフック。
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { INITIAL_PAYMENT_STATE } from "../constants/initialState";
+import { INITIAL_PAYMENT_STATE } from "../../../constants/initialState";
 import {
   ORDER_SNAPSHOT_CONFIG,
   TIMEOUTS,
   TEMP_STORAGE_TEST_KEY,
   USE_MOCK_PAYMENT,
-} from "../constants/config";
-import { Api } from "../services/apiService";
+} from "../../../constants/config";
+import { Api } from "../../../services/apiService";
 import { loadSquareSdk } from "../services/squarePaymentService";
 import {
   getLocalStorageJSON,
   removeLocalStorageItem,
   setLocalStorageJSON,
-} from "../utils/localStorage";
-import { formatDisplayReserved } from "../utils/dateFormat";
+} from "../../../utils/localStorage";
+import { formatDisplayReserved } from "../../../utils/dateFormat";
 import { buildVerificationDetails } from "../features/payment/paymentValidation";
-import { buildOrderSnapshot } from "../features/order/orderSnapshot";
-import { createPaymentOrder } from "../features/payment/paymentSession";
-import { parseReservedToDate } from "../utils/orderUtils";
+import { buildOrderSnapshot } from "../../../features/order/orderSnapshot";
+import { createPaymentOrder } from "../../../features/payment/paymentSession";
+import { parseReservedToDate } from "../../../utils/orderUtils";
 import {
   ensurePaymentCardMounted,
   submitPaymentTransaction,
