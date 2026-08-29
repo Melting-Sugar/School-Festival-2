@@ -1,3 +1,7 @@
+このアプリケーションは今年度の学祭に向けver.2.0.への大幅なリファクタリングを実施しています。去年のプロダクトのコードをご覧になりたい方は、「old-ver-2026」ブランチをご覧ください。
+アプリのデモ版：https://melting-sugar.github.io/School-Festival-2_ForExhibition/
+アプリの全体像について解説している動画：https://youtu.be/9oQvhiEaNYs
+
 # School-Festival-2
 
 客側モバイルオーダーのフロントエンドです。ユーザーはこのアプリを通じて、商品選択、予約時刻の指定、決済(PaySys経由のクレジットカード/PayPay)、注文内容と番号札の確認を行います。
