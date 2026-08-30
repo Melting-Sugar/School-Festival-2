@@ -47,6 +47,10 @@ export const Api = {
           } catch (e) {
             console.warn("getSquareConfig: failed to parse JSON from /api/square/config:", e);
             if (!useMockPayment) {
+              // Error.causeはtsconfig.jsonのlib(ES2020)では型定義上使えない
+              // (ES2022.Error相当が必要)。この関数自体が未使用のSquareコード
+              // 専用のため、lib引き上げは行わずこの1箇所だけ許容する。
+              // eslint-disable-next-line preserve-caught-error
               throw new Error("Square設定の取得に失敗しました");
             }
           }
