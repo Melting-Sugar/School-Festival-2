@@ -1,61 +1,121 @@
-// Api.getSquareConfig の real / mock モード別の fallback 挙動を確認するテスト。
-describe("Api.getSquareConfig", () => {
-  const originalEnv = { ...process.env };
+// apiService.ts の実運用メソッド(createOrder/fetchAllItems/fetchOrder)を確認するテスト。
+// getSquareConfigのテストはsrc/legacy/square/__tests__/getSquareConfig.test.jsへ移設した
+// (Square廃止に伴い⚠️未使用のメソッドのため。実運用のAPI呼び出しはこのファイルで扱う)。
+import { Api } from "../services/apiService";
+import { API_ENDPOINTS } from "../constants/config";
 
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
+describe("Api.fetchAllItems", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  afterAll(() => {
-    process.env = originalEnv;
+  test("正しいエンドポイントを叩き、取得した配列をそのまま返す", async () => {
+    const items = [{ itemId: 10, itemName: "角煮 単品", price: 470, imagePath: "/x.jpg", available: true }];
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(items),
+    });
+
+    await expect(Api.fetchAllItems()).resolves.toEqual(items);
+    expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.ALL_ITEMS);
   });
 
-  test("fails closed in real mode when square config cannot be fetched", async () => {
+  test("レスポンスがokでない場合はエラーを投げる", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+
+    await expect(Api.fetchAllItems()).rejects.toThrow("商品情報の取得に失敗しました");
+  });
+});
+
+describe("Api.createOrder", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test("正しいURL・メソッド・ボディでPOSTし、素のorderIdをそのまま返す", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(42),
+    });
+
+    const result = await Api.createOrder({
+      items: [{ itemId: 10, quantity: 1 }],
+      drinkCounts: { 91: 1 },
+      orderDate: "2026-08-30T12:00:00",
+      reservedTime: "2026-08-30T12:30:00",
+    });
+
+    expect(result).toBe(42);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe(API_ENDPOINTS.ORDER_CREATE);
+    expect(options.method).toBe("POST");
+    expect(options.headers).toEqual({ "Content-Type": "application/json" });
+    expect(JSON.parse(options.body)).toEqual({
+      orderDate: "2026-08-30T12:00:00",
+      reservedTime: "2026-08-30T12:30:00",
+      items: [{ itemId: 10, quantity: 1 }],
+      drinkCounts: { 91: 1 },
+      servingStatus: 0,
+      paymentStatus: false,
+    });
+  });
+
+  test("servingStatus/paymentStatus/drinkCountsを省略した場合は既定値(0, false, {})を送る", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(1),
+    });
+
+    await Api.createOrder({
+      items: [{ itemId: 10, quantity: 1 }],
+      orderDate: "2026-08-30T12:00:00",
+      reservedTime: "2026-08-30T12:30:00",
+    });
+
+    const [, options] = global.fetch.mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(body.servingStatus).toBe(0);
+    expect(body.paymentStatus).toBe(false);
+    expect(body.drinkCounts).toEqual({});
+  });
+
+  test("レスポンスがokでない場合はエラーを投げる", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
-      status: 500,
-      headers: { get: jest.fn().mockReturnValue("application/json") },
-      text: jest.fn().mockResolvedValue(""),
+      status: 400,
+      text: jest.fn().mockResolvedValue("Bad Request"),
     });
 
-    const { Api } = require("../services/apiService");
-
-    await expect(Api.getSquareConfig({ useMockPayment: false })).rejects.toThrow(
-      "Square設定の取得に失敗しました"
-    );
-
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/square/config",
-      expect.objectContaining({
-        headers: { Accept: "application/json" },
+    await expect(
+      Api.createOrder({
+        items: [{ itemId: 10, quantity: 1 }],
+        orderDate: "2026-08-30T12:00:00",
+        reservedTime: "2026-08-30T12:30:00",
       })
-    );
+    ).rejects.toThrow("注文作成に失敗しました");
+  });
+});
+
+describe("Api.fetchOrder", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  test("falls back to env config in mock mode when backend config is unavailable", async () => {
-    process.env.VITE_SQUARE_APP_ID = "sq0idp-mock-app";
-    process.env.VITE_SQUARE_LOCATION_ID = "mock-location";
-    process.env.VITE_SQUARE_ENV = "sandbox";
-
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      headers: { get: jest.fn().mockReturnValue("application/json") },
-      text: jest.fn().mockResolvedValue(""),
+  test("orderIdを含む正しいURLを叩き、取得結果をそのまま返す", async () => {
+    const order = { orderId: 42, orderedItems: [] };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(order),
     });
 
-    const { Api } = require("../services/apiService");
+    await expect(Api.fetchOrder(42)).resolves.toEqual(order);
+    expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.ORDER_GET(42));
+  });
 
-    await expect(Api.getSquareConfig({ useMockPayment: true })).resolves.toEqual({
-      applicationId: "sq0idp-mock-app",
-      locationId: "mock-location",
-      environment: "SANDBOX",
-    });
+  test("レスポンスがokでない場合はエラーを投げる", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 });
 
-    // 存在しない旧フォールバック(/api/payment/get/ApplicationId)は呼ばず、
-    // /api/square/config の失敗後は直接 SQUARE_FALLBACK_CONFIG へ進む。
-    expect(global.fetch).toHaveBeenCalledTimes(1);
+    await expect(Api.fetchOrder(42)).rejects.toThrow("注文取得に失敗しました");
   });
 });
