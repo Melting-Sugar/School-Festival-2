@@ -160,8 +160,12 @@ export const Api = {
     return res.json(); // backend PaymentResponse: { paymentId, status, amount, currency, hasKeyError }
   },
 
-  // 注文情報を取得する。
-  // backend has: GET /api/order/get/byorderId/{orderId}
+  // ⚠️ 現状どこからも呼ばれていない(未使用)。「注文を確認する」機能は現状
+  // localStorageベースで、このAPIを経由しない(src/features/order/orderSnapshot.ts
+  // 参照)。パス(単数形"order"。ORDER_CREATE/ORDER_GET以外のエンドポイントは
+  // すべて複数形"orders")もバックエンドの実装に対して未検証のままの想定であり、
+  // このコメントの元ネタである仕様書上の記載を鵜呑みにしているだけの状態。
+  // 実際に使う際は、まずバックエンドの実ルートを確認すること。
   async fetchOrder(orderId: string | number) {
     const res = await fetch(API_ENDPOINTS.ORDER_GET(orderId));
     if (!res.ok) throw new Error("注文取得に失敗しました");
