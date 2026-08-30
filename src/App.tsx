@@ -3,6 +3,7 @@ import "./styles.css";
 import { useRef, useState } from "react";
 
 import { Header } from "./components/Header";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useAppFlow } from "./hooks/useAppFlow";
 import { useOrderSummary } from "./hooks/useOrderSummary";
 import { useMenuItems } from "./hooks/useMenuItems";
@@ -54,32 +55,34 @@ export const App = () => {
         <div style={{ minHeight: "10px" }}></div>
       </header>
 
-      <AppScreenRenderer
-        step={state.step}
-        next={next}
-        prev={prev}
-        cart={state.cart}
-        addItems={addItems}
-        removeItems={removeItems}
-        prices={prices}
-        itemNames={itemNames}
-        imagePaths={imagePaths}
-        isSoldout={isSoldout}
-        menuFetchError={fetchError}
-        onRetryMenuFetch={refreshMenuItems}
-        calculateDifferenceOfDrinks={calculateDifferenceOfDrinks}
-        calculateSumInMenu={calculateSumInMenu}
-        calculateSumPrice={calculateSumPrice}
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
-        currentTestTime={currentTestTime}
-        paymentState={paymentState}
-        setPaymentState={setPaymentState}
-        dispatch={dispatch}
-        onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
-        hasSavedOrder={hasSavedOrder}
-        onViewSavedOrder={viewSavedOrder}
-      />
+      <ErrorBoundary>
+        <AppScreenRenderer
+          step={state.step}
+          next={next}
+          prev={prev}
+          cart={state.cart}
+          addItems={addItems}
+          removeItems={removeItems}
+          prices={prices}
+          itemNames={itemNames}
+          imagePaths={imagePaths}
+          isSoldout={isSoldout}
+          menuFetchError={fetchError}
+          onRetryMenuFetch={refreshMenuItems}
+          calculateDifferenceOfDrinks={calculateDifferenceOfDrinks}
+          calculateSumInMenu={calculateSumInMenu}
+          calculateSumPrice={calculateSumPrice}
+          selectedTime={selectedTime}
+          setSelectedTime={setSelectedTime}
+          currentTestTime={currentTestTime}
+          paymentState={paymentState}
+          setPaymentState={setPaymentState}
+          dispatch={dispatch}
+          onOpenLegalNotice={() => setIsLegalNoticeOpen(true)}
+          hasSavedOrder={hasSavedOrder}
+          onViewSavedOrder={viewSavedOrder}
+        />
+      </ErrorBoundary>
 
       {isLegalNoticeOpen && (
         <LegalNoticePage onClose={() => setIsLegalNoticeOpen(false)} />
