@@ -67,6 +67,8 @@ export const screenState = (state: AppState, action: AppAction): AppState => {
       }
       return { ...state, cart: newCart };
     }
+    // ⚠️ 現状どこからもdispatchされていない(types.tsのAppAction参照)。
+    // 削除はせず、将来使う可能性を考慮してreducerの実装のみ残している。
     case "DELETE_TEMPORARY": {
       const newCart: Cart = { ...state.cart };
       for (const itemId of [

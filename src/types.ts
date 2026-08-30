@@ -20,6 +20,7 @@ export type AppAction =
   | { type: "PREV" }
   | { type: "CHANGE_ITEM_QUANTITY"; itemId: number; delta: number }
   | { type: "CLEAR_TEMPORARY_DRINKS" }
+  // ⚠️ 現状どこからもdispatchされていない(useAppFlow.tsのreducerには実装済み)。
   | { type: "DELETE_TEMPORARY" }
   | { type: "REPLACE_CART"; cart: Cart };
 
