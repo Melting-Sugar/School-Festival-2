@@ -79,16 +79,17 @@ describe("PaymentResultPage", () => {
     expect(dispatch).toHaveBeenCalledWith({ type: "GOTO", step: "numberTag" });
   });
 
-  test("失敗時: orderIdがあれば予約時刻を表示し、なければ表示しない", () => {
+  test("失敗時: orderIdがあれば予約時刻を表示する(現状のモック実装では未到達だが、" +
+    "PaySys実装後に「注文作成後・課金失敗」の状態で使われる想定の分岐)", () => {
     render({
       outcome: { ok: false, orderId: "ORDER-1", error: "エラー文言", receiptUrl: null, displayReserved: "13:00" },
     });
     expect(container.textContent).toContain("予約時刻");
     expect(container.textContent).toContain("13:00");
     expect(container.textContent).toContain("エラー文言");
+  });
 
-    act(() => root.unmount());
-    root = createRoot(container);
+  test("失敗時: orderIdがなければ予約時刻を表示しない(現状のモック実装で実際に通る経路)", () => {
     render({ outcome: { ok: false, orderId: null, error: "エラー文言", receiptUrl: null, displayReserved: null } });
     expect(container.textContent).not.toContain("予約時刻");
   });

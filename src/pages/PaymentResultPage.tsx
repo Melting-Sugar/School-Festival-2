@@ -68,6 +68,10 @@ export const PaymentResultPage = ({ paymentState, selectedTime, setPaymentState,
           >
             決済に失敗しました
           </p>
+          {/* 現状のモック実装ではok:falseのときorderIdは常にnullなので、この分岐は
+              まだ到達しない。PaySys実装後、「注文は作成できたが課金は失敗した」
+              という状態(paymentSession.tsのcreatePaymentOrder()参照)になった際に
+              意味を持つようになる想定で、あえて残してある。 */}
           {paymentState.outcome.orderId && (
             <p style={{ textAlign: "center", fontSize: 24, margin: "18px" }}>
               予約時刻：

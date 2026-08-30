@@ -282,6 +282,7 @@ sequenceDiagram
 
 - **`USE_MOCK_PAYMENT`はビルド時に固定される値です**(`import.meta.env`経由で読むため)。`.env.local`を変更したら、開発サーバー(`npm run dev`)を再起動してください。
 - **PayPayは現状バックエンドの決済実行APIが存在しません。** カードより先にバックエンドとの合意が必要です。
+- [`src/pages/PaymentResultPage.tsx`](../src/pages/PaymentResultPage.tsx)には、失敗時に`outcome.orderId`があれば予約時刻を表示する分岐がありますが、**現状のモック実装ではこの状態(`ok: false`かつ`orderId`が非null)には一度も到達しません**(未実装エラーは常に`orderId: null`で返るため)。これは「注文は作成できたが、その後の課金が失敗した」というPaySys実装後に実際に起こりうる状態を見越した分岐です。`createPaymentOrder()`のように**注文作成と課金を分離して実装した場合、課金失敗時のエラーハンドリングで`orderId`を正しく`outcome`に渡すようにしてください**(そうしないと、せっかくのこの表示分岐が実装後も到達しないままになります)。
 - テストを書く際、`USE_MOCK_PAYMENT`は`process.env.VITE_USE_MOCK_PAYMENT`をセットしてから`jest.resetModules()`+`require()`し直す必要があります(セクション9参照)。
 
 ---

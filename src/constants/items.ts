@@ -44,6 +44,17 @@ export const PRODUCT_CATEGORY_IDS: number[] = [
 // 商品1つあたりの最大注文個数(Menu.tsxの数量ボタン上限)。
 export const MAX_ITEM_QUANTITY = 9;
 
+// ドリンクの紐付けを必要とする商品(単品ドリンク・セット・大盛りセット)のID一覧。
+// 「ドリンク選択画面へ進む必要があるか」(orderEligibility.ts)と
+// 「ドリンク選択の過不足」(useOrderSummary.ts)の両方がこの一覧を参照する。
+// 以前は同じ3つのIDの合計計算が2箇所に別々にハードコードされており、
+// カテゴリを追加・変更した際に片方だけ直し忘れるリスクがあったため統一した。
+export const DRINK_LINKED_ITEM_IDS: number[] = [
+  PRODUCT_CATEGORIES.DRINK_SINGLE,
+  PRODUCT_CATEGORIES.PORK_DRINK_SET,
+  PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE,
+];
+
 // 価格・商品名・画像はバックエンド(GET /api/items/get/allItems)から取得する。
 // モック値・フォールバック値は src/constants/mocks/menuMock.ts に集約している。
 
