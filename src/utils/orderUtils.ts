@@ -33,18 +33,34 @@ export const formatReservedTimeHHmm = (
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 
-/** "HH:mm" or ISO文字列 → Date（当日扱い/ISOはそのまま） */
-export const parseReservedToDate = (value: string | null | undefined): Date | null => {
+/**
+ * "HH:mm" or ISO文字列 → Date。
+ * "HH:mm"形式の場合、baseDate(省略時は現在時刻)の年月日に時刻を当てはめる。
+ * 以前はほぼ同じロジックがsrc/features/order/orderSnapshot.tsの
+ * parseReservedFromSaved()にも重複して存在していたが、この関数に統合した
+ * (localStorageから復元した予約日時を、作成日時を基準に解釈したい場合は
+ * baseDateに作成日時のDateを渡す)。
+ */
+export const parseReservedToDate = (
+  value: string | null | undefined,
+  baseDate: Date = new Date()
+): Date | null => {
   if (!value) return null;
-  // ISOなら new Date() が解釈
-  if (value.includes("T") || value.includes("-")) {
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : d;
-  }
-  // "HH:mm" を今日の日付として扱う
-  const [hh, mm] = value.split(":").map((v) => Number(v));
-  if (isNaN(hh) || isNaN(mm)) return null;
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+
+  // ISO文字列などDateがそのまま解釈できる形式を優先して試す。
+  // "HH:mm"のような日付を含まない文字列はDateの仕様上ここでは解釈されない
+  // (Invalid Dateになる)ため、下のHH:mm分岐へ正しくフォールスルーする。
+  const byIso = new Date(value);
+  if (!isNaN(byIso.getTime())) return byIso;
+
+  // "HH:mm" をbaseDateの日付として扱う。範囲外の値(例: "99:99")は無効とする。
+  const m = String(value).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const hours = parseInt(m[1], 10);
+  const minutes = parseInt(m[2], 10);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+  const d = new Date(baseDate);
+  d.setHours(hours, minutes, 0, 0);
   return d;
 };

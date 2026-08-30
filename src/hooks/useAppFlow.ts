@@ -2,7 +2,7 @@
 import { useCallback, useReducer, useState } from "react";
 
 import { INITIAL_APP_STATE, INITIAL_UI_STATE } from "../constants/initialState";
-import { PRODUCT_CATEGORIES, DRINK_TYPE_IDS } from "../constants/items";
+import { DRINK_TYPE_IDS } from "../constants/items";
 import { STEPS_ARRAY, type Step } from "../constants/steps";
 import { canProceedFromMenu } from "../features/order/orderEligibility";
 import type { AppAction, AppState, Cart } from "../types";
@@ -64,19 +64,6 @@ export const screenState = (state: AppState, action: AppAction): AppState => {
       const newCart: Cart = { ...state.cart };
       for (const drinkId of DRINK_TYPE_IDS) {
         newCart[drinkId] = 0;
-      }
-      return { ...state, cart: newCart };
-    }
-    // ⚠️ 現状どこからもdispatchされていない(types.tsのAppAction参照)。
-    // 削除はせず、将来使う可能性を考慮してreducerの実装のみ残している。
-    case "DELETE_TEMPORARY": {
-      const newCart: Cart = { ...state.cart };
-      for (const itemId of [
-        PRODUCT_CATEGORIES.DRINK_SINGLE,
-        PRODUCT_CATEGORIES.PORK_DRINK_SET,
-        PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE,
-      ]) {
-        newCart[itemId] = 0;
       }
       return { ...state, cart: newCart };
     }

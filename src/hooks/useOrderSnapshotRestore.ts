@@ -4,11 +4,8 @@ import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } 
 import { ORDER_SNAPSHOT_CONFIG } from "../constants/config";
 import { getLocalStorageJSON, removeLocalStorageItem } from "../utils/localStorage";
 import { formatDisplayReserved } from "../utils/dateFormat";
-import {
-  clearOrderSnapshot,
-  isReservationExpired,
-  parseReservedFromSaved,
-} from "../features/order/orderSnapshot";
+import { parseReservedToDate } from "../utils/orderUtils";
+import { clearOrderSnapshot, isReservationExpired } from "../features/order/orderSnapshot";
 import type { AppAction, OrderSnapshot, PaymentState } from "../types";
 
 export function useOrderSnapshotRestore({
@@ -34,7 +31,7 @@ export function useOrderSnapshotRestore({
     const { reservedAtIso, createdAt } = saved;
     if (!reservedAtIso) return null;
 
-    const reserved = parseReservedFromSaved(reservedAtIso, createdAt);
+    const reserved = parseReservedToDate(reservedAtIso, createdAt ? new Date(createdAt) : new Date());
     if (!reserved) return null;
 
     if (
