@@ -94,7 +94,7 @@
 - **ビルドツールの入れ替え(Create React App → Vite)**: これまで使っていた「Create React App(react-scripts)」という仕組みは、開発コミュニティ内で更新が止まりつつあり、TypeScriptの新しいバージョンとの相性問題も出始めていたため、より現在主流で高速な「Vite」という仕組みに入れ替えました。開発中の画面更新速度が大きく向上しています。
 - **テストの仕組みは変えていません**: テスト(自動で正しく動くか確認する仕組み)は「Jest」という仕組みのまま維持しています。Vite標準の「Vitest」への切り替えも検討しましたが、既存のテストの書き方(特定のモジュールを毎回読み直す特殊な書き方)を書き換えるとテストの意味が変わってしまうリスクがあったため、あえて変更しませんでした。
 - 環境変数(`.env`ファイルで設定する値)の名前も、Viteの流儀に合わせて`REACT_APP_`から`VITE_`へ変更しています。
-- 関連ファイル: 実質ほぼ全ての`src/`配下のファイル(拡張子変更)、新設: `vite.config.ts`, `tsconfig.json`, `babel.config.cjs`, `jest.config.cjs`, `index.html`(ルート)。詳しい技術的経緯は[docs/frontend-handover.md](./frontend-handover.md)の「3. ビルドツール・技術スタック」参照。
+- 関連ファイル: 実質ほぼ全ての`src/`配下のファイル(拡張子変更)、新設: `vite.config.ts`, `tsconfig.json`, `babel.config.cjs`, `jest.config.cjs`, `index.html`(ルート)。詳しい技術的経緯は[docs/frontend-handover.md](./frontend-handover.md)の「開発環境・ビルドツール」の章参照。
 
 ---
 
@@ -107,7 +107,7 @@
 ### 詳細な解説
 
 - **[docs/backend-requirements.md](./backend-requirements.md)(新設)**: バックエンド担当のチームメンバーへの依頼事項・修正提案をまとめたドキュメントです。APIのパスの不一致、決済のセキュリティ上の懸念(他人の注文を操作できてしまう問題等)、ドリンク割り振り計算をバックエンド側に実装してほしいという提案などを記載しています。
-- **[docs/frontend-handover.md](./frontend-handover.md)(新設)**: 後任のフロントエンド開発者が最初に読むべき仕様書です。画面遷移の考え方、カートの設計、決済の実装状況、既知の懸念事項、テストの書き方などをまとめています。今回のコード品質改善(セクション6)の内容も反映済みです。
+- **[docs/frontend-handover.md](./frontend-handover.md)(新設)**: 後任のフロントエンド開発者が最初に読むべき仕様書です。アプリの概要・設計・重要な定数・「どこを直せば何が変わるか」をまとめており、特にPaySys決済の実装ガイドを重点的に記載しています(このドキュメント(ver2.0-changes.md)とは役割が異なり、変更履歴ではなくアプリそのものの仕組みを解説する内容です)。
 - **README.mdの更新**: 就職活動等でこのアプリを公開する目的で、READMEの冒頭にデモ版・解説動画へのリンクを追加しました。また、環境変数やビルドツールに関する説明を、TypeScript/Vite移行後の内容に合わせて更新しています。
 - 関連ファイル: `docs/backend-requirements.md`, `docs/frontend-handover.md`, `README.md`
 
@@ -159,4 +159,4 @@
 - **決済(PaySys)は現時点で「見せかけ」の状態です。** 実際にお金のやり取りをする部分は未実装で、後任のフロントエンド担当者が実装する必要があります(セクション1参照)。
 - **本番公開前に、必ず3つの「モックスイッチ」(`VITE_USE_MOCK_PAYMENT`/`VITE_USE_MOCK_MENU`/`VITE_USE_TEST_TIME`)を全てオフにしてください。** オンのままだと、決済・メニュー・時刻のいずれかが本物のバックエンドに接続されず、見せかけの動作のままになってしまいます。
 - **予約の受付時間の制限が、現状フロント(このアプリ)側でしか行われていません。** バックエンドのAPIを直接叩けば、受付時間外の予約も作成できてしまう状態です。バックエンド側への対応依頼は済んでいますが(`docs/backend-requirements.md` 10番)、未対応です。
-- その他の技術的な懸念事項・未対応事項は[docs/frontend-handover.md](./frontend-handover.md)の「10. 既知の懸念事項」に一覧でまとめてあります。
+- その他の技術的な懸念事項・未対応事項は[docs/frontend-handover.md](./frontend-handover.md)の「既知の懸念事項」の章に一覧でまとめてあります。
