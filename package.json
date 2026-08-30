@@ -3,29 +3,32 @@
   "version": "1.0.0",
   "description": "",
   "keywords": [],
-  "main": "src/index.jsx",
+  "type": "module",
+  "main": "src/index.tsx",
   "dependencies": {
-    "ajv": "^8.20.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-scripts": "^5.0.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
-    "loader-utils": "3.2.1",
-    "typescript": "5.7.2"
+    "@vitejs/plugin-react": "^6.1.1",
+    "babel-jest": "^30.5.0",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
+    "jest": "^30.5.0",
+    "jest-environment-jsdom": "^30.5.0",
+    "typescript": "5.7.2",
+    "vite": "^8.2.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+    "dev": "vite",
+    "start": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "jest"
+  }
 }

@@ -21,7 +21,7 @@ describe("useMenuItems", () => {
   });
 
   test("USE_MOCK_MENUがオンの場合、fetchを呼ばずモック値を返す", async () => {
-    process.env.REACT_APP_USE_MOCK_MENU = "true";
+    process.env.VITE_USE_MOCK_MENU = "true";
     const fetchAllItems = jest.fn();
     jest.doMock("../services/apiService", () => ({ Api: { fetchAllItems } }));
 
@@ -48,7 +48,7 @@ describe("useMenuItems", () => {
   });
 
   test("USE_MOCK_MENUがオフでfetchが成功した場合、取得結果を反映する", async () => {
-    process.env.REACT_APP_USE_MOCK_MENU = "false";
+    process.env.VITE_USE_MOCK_MENU = "false";
     const fetchAllItems = jest.fn().mockResolvedValue([
       { itemId: 10, itemName: "テスト角煮", price: 999, imagePath: "/x.jpg", available: true },
       { itemId: 91, itemName: "テストコーラ", price: 0, imagePath: "/y.jpg", available: false },
@@ -83,7 +83,7 @@ describe("useMenuItems", () => {
   });
 
   test("USE_MOCK_MENUがオフでfetchが失敗した場合、fetchErrorを立てハードコード値へフォールバックしない", async () => {
-    process.env.REACT_APP_USE_MOCK_MENU = "false";
+    process.env.VITE_USE_MOCK_MENU = "false";
     const fetchAllItems = jest.fn().mockRejectedValue(new Error("network error"));
     jest.doMock("../services/apiService", () => ({ Api: { fetchAllItems } }));
 
@@ -112,7 +112,7 @@ describe("useMenuItems", () => {
   });
 
   test("menuステップ以外では取得しない", async () => {
-    process.env.REACT_APP_USE_MOCK_MENU = "false";
+    process.env.VITE_USE_MOCK_MENU = "false";
     const fetchAllItems = jest.fn().mockResolvedValue([]);
     jest.doMock("../services/apiService", () => ({ Api: { fetchAllItems } }));
 

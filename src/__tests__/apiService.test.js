@@ -35,9 +35,9 @@ describe("Api.getSquareConfig", () => {
   });
 
   test("falls back to env config in mock mode when backend config is unavailable", async () => {
-    process.env.REACT_APP_SQUARE_APP_ID = "sq0idp-mock-app";
-    process.env.REACT_APP_SQUARE_LOCATION_ID = "mock-location";
-    process.env.REACT_APP_SQUARE_ENV = "sandbox";
+    process.env.VITE_SQUARE_APP_ID = "sq0idp-mock-app";
+    process.env.VITE_SQUARE_LOCATION_ID = "mock-location";
+    process.env.VITE_SQUARE_ENV = "sandbox";
 
     global.fetch = jest.fn().mockResolvedValueOnce({
       ok: false,
