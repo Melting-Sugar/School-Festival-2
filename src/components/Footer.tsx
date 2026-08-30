@@ -1,6 +1,5 @@
 // 画面下部のナビゲーションと合計表示を担当するフッターコンポーネント。
 import type { CSSProperties } from "react";
-import { RESERVATION_CONFIG } from "../constants/config";
 import { getFooterActionLabel, isFooterNextDisabled, shouldShowFooter } from "../constants/stepRules";
 import type { Step } from "../constants/steps";
 
@@ -24,9 +23,6 @@ export const Footer = ({
   difference,
 }: FooterProps) => {
   const now = testTime || new Date();
-  const isAfterLastOrder =
-    now.getHours() > RESERVATION_CONFIG.LAST_ORDER_HOUR ||
-    (now.getHours() === RESERVATION_CONFIG.LAST_ORDER_HOUR && now.getMinutes() >= RESERVATION_CONFIG.LAST_ORDER_MINUTE);
   const showFooter = shouldShowFooter(currentStep);
   const nextDisabled = isFooterNextDisabled(currentStep, {
     numOfChosenMenu,
@@ -74,7 +70,7 @@ export const Footer = ({
         </div>
       )}
       {currentStep === "time" && (
-        //注文確定ボタン
+        //注文確定ボタン(有効/無効の判定はstepRules.tsのisFooterNextDisabledに一本化)
         <div style={{ flex: 1, textAlign: "right" }}>
           <button
             style={{
@@ -82,12 +78,12 @@ export const Footer = ({
               backgroundColor: "#ff962d",
               border: "2px solid #000",
               fontWeight: "bold",
-              ...(isAfterLastOrder ? disabledBtnStyle : {}),
+              ...(nextDisabled ? disabledBtnStyle : {}),
             }}
-            disabled={isAfterLastOrder}
-            aria-disabled={isAfterLastOrder}
+            disabled={nextDisabled}
+            aria-disabled={nextDisabled}
             onClick={(e) => {
-              if (isAfterLastOrder) return;
+              if (nextDisabled) return;
               e.stopPropagation();
               next();
             }}

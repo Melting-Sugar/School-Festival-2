@@ -9,7 +9,8 @@ export const API_ENDPOINTS = {
   ORDER_GET: (orderId: string | number) => `/api/order/get/byorderId/${orderId}`,
 };
 
-// タイムアウト・遅延設定
+// ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から参照しないこと)
+// タイムアウト・遅延設定(Square SDKのカード取り付け待ち等でのみ使用)
 export const TIMEOUTS = {
   CARD_ATTACH_WAIT: 8000, // ms
   CARD_ATTACH_INTERVAL: 50, // ms
@@ -17,7 +18,8 @@ export const TIMEOUTS = {
   CARD_MOUNT_DELAY: 100, // ms
 };
 
-// リトライ設定
+// ⚠️ 未使用(Square廃止に伴い隔離。src/legacy/square/ 以外から参照しないこと)
+// リトライ設定(Square SDKのカード取り付けリトライでのみ使用)
 export const RETRY_CONFIG = {
   CARD_ATTACH_TRIES: 4,
   CARD_ATTACH_DELAY: 300, // ms

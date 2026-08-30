@@ -5,7 +5,10 @@
 import type { CSSProperties } from "react";
 import { Menu } from "../components/Menu";
 import { StepPageLayout } from "../components/StepPageLayout";
+import { PRODUCT_CATEGORIES } from "../constants/items";
 import type { Cart, ImagePathMap, NameMap, PriceMap, SoldoutMap } from "../types";
+
+const { PORK_SINGLE, PORK_SINGLE_LARGE, DRINK_SINGLE, PORK_DRINK_SET, PORK_DRINK_SET_LARGE } = PRODUCT_CATEGORIES;
 
 interface MenuPageProps {
   prices: PriceMap;
@@ -55,66 +58,66 @@ export const MenuPage = ({
           <Menu
             borderColor={"2px solid #ffbf7f"}
             backgroundColor={"#ffd3a8"}
-            itemPrice={prices[40] as number}
-            itemName={itemNames[40]}
-            count={cart[40]}
-            id={40}
+            itemPrice={prices[PORK_DRINK_SET] as number}
+            itemName={itemNames[PORK_DRINK_SET]}
+            count={cart[PORK_DRINK_SET]}
+            id={PORK_DRINK_SET}
             add={addItems}
             remove={removeItems}
-            image={imagePaths[40]}
-            isSoldout={isSoldout[40]}
+            image={imagePaths[PORK_DRINK_SET]}
+            isSoldout={isSoldout[PORK_DRINK_SET]}
           />
           <Menu
             borderColor={"2px solid #ffbf7f"}
             backgroundColor={"#ffd3a8"}
-            itemPrice={prices[50] as number}
-            itemName={itemNames[50]}
-            count={cart[50]}
-            id={50}
+            itemPrice={prices[PORK_DRINK_SET_LARGE] as number}
+            itemName={itemNames[PORK_DRINK_SET_LARGE]}
+            count={cart[PORK_DRINK_SET_LARGE]}
+            id={PORK_DRINK_SET_LARGE}
             add={addItems}
             remove={removeItems}
-            image={imagePaths[50]}
-            isSoldout={isSoldout[50]}
-          />
-        </div>
-        <div className="list-row">
-          <Menu
-            borderColor={"2px solid #ffbf7f"}
-            backgroundColor={"#ffd3a8"}
-            itemPrice={prices[10] as number}
-            itemName={itemNames[10]}
-            count={cart[10]}
-            id={10}
-            add={addItems}
-            remove={removeItems}
-            image={imagePaths[10]}
-            isSoldout={isSoldout[10]}
-          />
-          <Menu
-            borderColor={"2px solid #ffbf7f"}
-            backgroundColor={"#ffd3a8"}
-            itemPrice={prices[20] as number}
-            itemName={itemNames[20]}
-            count={cart[20]}
-            id={20}
-            add={addItems}
-            remove={removeItems}
-            image={imagePaths[20]}
-            isSoldout={isSoldout[20]}
+            image={imagePaths[PORK_DRINK_SET_LARGE]}
+            isSoldout={isSoldout[PORK_DRINK_SET_LARGE]}
           />
         </div>
         <div className="list-row">
           <Menu
             borderColor={"2px solid #ffbf7f"}
             backgroundColor={"#ffd3a8"}
-            itemPrice={prices[30] as number}
-            itemName={itemNames[30]}
-            count={cart[30]}
-            id={30}
+            itemPrice={prices[PORK_SINGLE] as number}
+            itemName={itemNames[PORK_SINGLE]}
+            count={cart[PORK_SINGLE]}
+            id={PORK_SINGLE}
             add={addItems}
             remove={removeItems}
-            image={imagePaths[30]}
-            isSoldout={isSoldout[30]}
+            image={imagePaths[PORK_SINGLE]}
+            isSoldout={isSoldout[PORK_SINGLE]}
+          />
+          <Menu
+            borderColor={"2px solid #ffbf7f"}
+            backgroundColor={"#ffd3a8"}
+            itemPrice={prices[PORK_SINGLE_LARGE] as number}
+            itemName={itemNames[PORK_SINGLE_LARGE]}
+            count={cart[PORK_SINGLE_LARGE]}
+            id={PORK_SINGLE_LARGE}
+            add={addItems}
+            remove={removeItems}
+            image={imagePaths[PORK_SINGLE_LARGE]}
+            isSoldout={isSoldout[PORK_SINGLE_LARGE]}
+          />
+        </div>
+        <div className="list-row">
+          <Menu
+            borderColor={"2px solid #ffbf7f"}
+            backgroundColor={"#ffd3a8"}
+            itemPrice={prices[DRINK_SINGLE] as number}
+            itemName={itemNames[DRINK_SINGLE]}
+            count={cart[DRINK_SINGLE]}
+            id={DRINK_SINGLE}
+            add={addItems}
+            remove={removeItems}
+            image={imagePaths[DRINK_SINGLE]}
+            isSoldout={isSoldout[DRINK_SINGLE]}
           />
         </div>
       </div>

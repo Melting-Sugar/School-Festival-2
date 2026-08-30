@@ -23,10 +23,26 @@ export const PRODUCT_CATEGORIES = {
 } as const;
 
 // ===== ドリンク関連の便利な配列 =====
-export const DRINK_TYPE_IDS: number[] = [91, 92, 93, 94];
+// PRODUCT_CATEGORIESから導出する(値を再度ハードコードすると、カテゴリ追加時に
+// 片方だけ更新し忘れて静かにズレる)。
+export const DRINK_TYPE_IDS: number[] = [
+  PRODUCT_CATEGORIES.COLA,
+  PRODUCT_CATEGORIES.ORANGE,
+  PRODUCT_CATEGORIES.CIDER,
+  PRODUCT_CATEGORIES.OOLONG,
+];
 
 // ===== 注文処理で使う ID 集合 =====
-export const PRODUCT_CATEGORY_IDS: number[] = [10, 20, 30, 40, 50];
+export const PRODUCT_CATEGORY_IDS: number[] = [
+  PRODUCT_CATEGORIES.PORK_SINGLE,
+  PRODUCT_CATEGORIES.PORK_SINGLE_LARGE,
+  PRODUCT_CATEGORIES.DRINK_SINGLE,
+  PRODUCT_CATEGORIES.PORK_DRINK_SET,
+  PRODUCT_CATEGORIES.PORK_DRINK_SET_LARGE,
+];
+
+// 商品1つあたりの最大注文個数(Menu.tsxの数量ボタン上限)。
+export const MAX_ITEM_QUANTITY = 9;
 
 // 価格・商品名・画像はバックエンド(GET /api/items/get/allItems)から取得する。
 // モック値・フォールバック値は src/constants/mocks/menuMock.ts に集約している。

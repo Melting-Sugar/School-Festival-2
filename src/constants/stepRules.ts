@@ -1,5 +1,7 @@
 // 画面ごとのフッター表示、ボタン文言、遷移制御の条件をまとめる定義ファイル。
 import { STEPS, type Step } from "./steps";
+import { RESERVATION_CONFIG } from "./config";
+import { isPastLastOrderTime } from "../features/reservation/reservationSchedule";
 
 export interface NextDisabledContext {
   numOfChosenMenu?: number;
@@ -35,10 +37,7 @@ export const STEP_RULES: Partial<Record<Step, StepRule>> = {
     actionLabel: "注文確定",
     nextDisabled: ({ now }) => {
       if (!now) return false;
-      const afterLastOrder =
-        now.getHours() > 17 ||
-        (now.getHours() === 17 && now.getMinutes() >= 10);
-      return afterLastOrder;
+      return isPastLastOrderTime(now, RESERVATION_CONFIG);
     },
   },
   [STEPS.PAYMENT_METHOD]: {

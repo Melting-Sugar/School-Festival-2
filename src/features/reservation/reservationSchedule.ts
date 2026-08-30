@@ -12,6 +12,24 @@ export interface TimeOption {
   label: string;
 }
 
+// 最終受付時刻(LAST_ORDER_HOUR:LAST_ORDER_MINUTE)を過ぎているかどうかを判定する。
+// ちょうど最終受付時刻そのものは「受付終了」扱い(その時刻は含まない)。
+// 予約候補の生成(このファイル)と、注文確定ボタンの無効化判定(stepRules.ts)の
+// 両方がこの関数を共有する。片方だけ直して判定基準がずれる事故を防ぐため、
+// 締切のhh:mm比較ロジックはこの関数以外に書かないこと。
+export function isPastLastOrderTime(
+  date: Date,
+  reservationConfig: ReservationConfig
+): boolean {
+  const hour = date.getHours();
+  const minutes = date.getMinutes();
+  return (
+    hour > reservationConfig.LAST_ORDER_HOUR ||
+    (hour === reservationConfig.LAST_ORDER_HOUR &&
+      minutes >= reservationConfig.LAST_ORDER_MINUTE)
+  );
+}
+
 export function generateTimeOptions(
   now: Date,
   reservationConfig: ReservationConfig
@@ -37,17 +55,12 @@ export function generateTimeOptions(
   let currentTime = startTime;
 
   while (true) {
-    const currentHour = currentTime.getHours();
-    const currentMinutes = currentTime.getMinutes();
-
-    if (
-      currentHour > reservationConfig.LAST_ORDER_HOUR ||
-      (currentHour === reservationConfig.LAST_ORDER_HOUR &&
-        currentMinutes > reservationConfig.LAST_ORDER_MINUTE)
-    ) {
+    if (isPastLastOrderTime(currentTime, reservationConfig)) {
       break;
     }
 
+    const currentHour = currentTime.getHours();
+    const currentMinutes = currentTime.getMinutes();
     const timeString = `${String(currentHour).padStart(2, "0")}:${String(
       currentMinutes
     ).padStart(2, "0")}`;

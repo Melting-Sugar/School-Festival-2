@@ -10,11 +10,21 @@ describe("reservationSchedule", () => {
   };
 
   test("generates rounded reservation options from the next available slot", () => {
-    const now = new Date(2026, 6, 2, 16, 56, 0);
+    const now = new Date(2026, 6, 2, 16, 50, 0);
 
     expect(generateTimeOptions(now, config)).toEqual([
-      { value: "17:10", label: "17:10" },
+      { value: "17:00", label: "17:00" },
+      { value: "17:05", label: "17:05" },
     ]);
+  });
+
+  // 最終受付時刻(17:10)そのものは「受付終了」扱いなので、候補には含まれない
+  // (stepRules.tsの締切判定と挙動を揃えるための仕様。isPastLastOrderTimeが
+  // 17:10以降をtrueとして扱うことと対応する)。
+  test("excludes the last order time itself from the candidates", () => {
+    const now = new Date(2026, 6, 2, 16, 56, 0);
+
+    expect(generateTimeOptions(now, config)).toEqual([]);
   });
 
   test("stops at the last order time", () => {

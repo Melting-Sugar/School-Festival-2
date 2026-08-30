@@ -2,7 +2,10 @@
 // (未取得時はMenu.tsxがプレースホルダーを表示する)。
 import { Menu } from "../components/Menu";
 import { StepPageLayout } from "../components/StepPageLayout";
+import { PRODUCT_CATEGORIES } from "../constants/items";
 import type { Cart, ImagePathMap, NameMap, SoldoutMap } from "../types";
+
+const { COLA, ORANGE, CIDER, OOLONG } = PRODUCT_CATEGORIES;
 
 interface DrinkPageProps {
   itemNames: NameMap;
@@ -70,56 +73,56 @@ export const DrinkPage = ({ itemNames, imagePaths, cart, addItems, removeItems, 
           <Menu
             borderColor={"2px solid #7fbfff"}
             backgroundColor={"#a8d3ff"}
-            itemName={itemNames[91]}
-            count={cart[91]}
-            id={91}
+            itemName={itemNames[COLA]}
+            count={cart[COLA]}
+            id={COLA}
             add={addItems}
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={imagePaths[91]}
-            isSoldout={isSoldout[91]}
+            image={imagePaths[COLA]}
+            isSoldout={isSoldout[COLA]}
           />
           <Menu
             borderColor={"2px solid #7fbfff"}
             backgroundColor={"#a8d3ff"}
-            itemName={itemNames[92]}
-            count={cart[92]}
-            id={92}
+            itemName={itemNames[ORANGE]}
+            count={cart[ORANGE]}
+            id={ORANGE}
             add={addItems}
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={imagePaths[92]}
-            isSoldout={isSoldout[92]}
+            image={imagePaths[ORANGE]}
+            isSoldout={isSoldout[ORANGE]}
           />
         </div>
         <div className="list-row">
           <Menu
             borderColor={"2px solid #7fbfff"}
             backgroundColor={"#a8d3ff"}
-            itemName={itemNames[93]}
-            count={cart[93]}
-            id={93}
+            itemName={itemNames[CIDER]}
+            count={cart[CIDER]}
+            id={CIDER}
             add={addItems}
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={imagePaths[93]}
-            isSoldout={isSoldout[93]}
+            image={imagePaths[CIDER]}
+            isSoldout={isSoldout[CIDER]}
           />
           <Menu
             borderColor={"2px solid #7fbfff"}
             backgroundColor={"#a8d3ff"}
-            itemName={itemNames[94]}
-            count={cart[94]}
-            id={94}
+            itemName={itemNames[OOLONG]}
+            count={cart[OOLONG]}
+            id={OOLONG}
             add={addItems}
             remove={removeItems}
             difference={difference}
             isDrinkScreen={true}
-            image={imagePaths[94]}
-            isSoldout={isSoldout[94]}
+            image={imagePaths[OOLONG]}
+            isSoldout={isSoldout[OOLONG]}
           />
         </div>
       </div>

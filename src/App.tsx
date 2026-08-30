@@ -11,13 +11,14 @@ import { AppScreenRenderer } from "./AppScreenRenderer";
 import { LegalNoticePage } from "./pages/LegalNoticePage";
 import { INITIAL_PAYMENT_STATE } from "./constants/initialState";
 import { USE_TEST_TIME, TEST_DATE } from "./constants/config";
+import { getCurrentTestDate } from "./utils/dateClock";
 
 export const App = () => {
   const appStartTimeRef = useRef(Date.now());
   const [isLegalNoticeOpen, setIsLegalNoticeOpen] = useState(false);
 
   const currentTestTime: Date | false = USE_TEST_TIME
-    ? new Date(TEST_DATE.getTime() + (Date.now() - appStartTimeRef.current))
+    ? getCurrentTestDate(appStartTimeRef.current, TEST_DATE)
     : false;
 
   const {

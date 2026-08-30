@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { MAX_ITEM_QUANTITY } from "../constants/items";
 
 interface MenuProps {
   borderColor?: string;
@@ -34,7 +35,7 @@ export const Menu = (props: MenuProps) => {
   // 無効条件
   const isRemoveDisabled = count <= 0;
   const isAddDisabled =
-    isSoldout || (isDrinkScreen && difference <= 0) || count >= 9;
+    isSoldout || (isDrinkScreen && difference <= 0) || count >= MAX_ITEM_QUANTITY;
 
   const containerStyle: CSSProperties = {
     ...itemStyle,
